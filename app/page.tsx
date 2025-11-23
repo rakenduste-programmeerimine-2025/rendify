@@ -1,36 +1,57 @@
-import { redirect } from "next/navigation";
+"use client";
 
-import { createClient } from "@/lib/supabase/server";
-import { InfoIcon } from "lucide-react";
-import { FetchDataSteps } from "@/components/tutorial/fetch-data-steps";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {useState} from "react";
+import products from '../products.json';
+import {ProductFilters} from "@/components/product-filters";
+import {Button} from "@/components/ui/button";
 
-export default async function ProtectedPage() {
-  const supabase = await createClient();
+export default function Home() {
+    const [name, setName] = useState("");
+    const [maxPrice, setMaxPrice] = useState(10);
+    const [distance, setDistance] = useState(15);
 
-  const { data, error } = await supabase.auth.getClaims();
-  if (error || !data?.claims) {
-    redirect("/auth/login");
-  }
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowISO = tomorrow.toISOString().split('T')[0];
+    const [startDate, setStartDate] = useState(tomorrowISO);
+    const [endDate, setEndDate] = useState(tomorrowISO);
 
-  return (
-      <div className="flex-1 w-full flex flex-col gap-12">
-        <div className="w-full">
-          <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-            <InfoIcon size="16" strokeWidth={2} />
-            This is a protected page that you can only see as an authenticated
-            user
-          </div>
+    return (
+        <div className="flex min-h-svh w-full p-6 md:p-10 gap-6">
+            <ProductFilters
+                name={name}
+                setName={setName}
+                maxPrice={maxPrice}
+                setMaxPrice={setMaxPrice}
+                distance={distance}
+                setDistance={setDistance}
+                startDate={startDate}
+                setStartDate={setStartDate}
+                endDate={endDate}
+                setEndDate={setEndDate}
+            />
+
+            <div className="w-full grid grid-cols-3 gap-6 h-fit">
+                {products.map((product) => (
+                    <Card key={product.id} className={"h-full flex flex-col"}>
+                        <CardHeader>
+                            <CardTitle className="text-base">{product.name}</CardTitle>
+                            <CardDescription>
+                                {product.description}
+                            </CardDescription>
+                            <CardDescription>
+                                {product.address}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className={"flex flex-row justify-between align-items-bottom items-center mt-auto"}>
+                            <Label className={"text-muted-foreground"}>{product.pricePerDay}€ per day</Label>
+                            <Button>View</Button>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </div>
-        <div className="flex flex-col gap-2 items-start">
-          <h2 className="font-bold text-2xl mb-4">Your user details</h2>
-          <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          {JSON.stringify(data.claims, null, 2)}
-        </pre>
-        </div>
-        <div>
-          <h2 className="font-bold text-2xl mb-4">Next steps</h2>
-          <FetchDataSteps />
-        </div>
-      </div>
-  );
+    );
 }
