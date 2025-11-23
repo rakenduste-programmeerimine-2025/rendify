@@ -1,0 +1,52 @@
+[
+  {
+    "id": "prod-001",
+    "name": "Makita Electric Saw",
+    "description": "Powerful electric saw suitable for wood and metal.",
+    "ownerName": "Alice",
+    "ownerId": "user-101",
+    "pricePerDay": 12.5,
+    "folder": "tools/electric-saw",
+    "address": "Kaubamaja 10, Tallinn, Estonia"
+  },
+  {
+    "id": "prod-002",
+    "name": "Bosch Drill 18V",
+    "description": "Cordless drill with advanced battery life.",
+    "ownerName": "Bob",
+    "ownerId": "user-102",
+    "pricePerDay": 8,
+    "folder": "tools/drill",
+    "address": "Pärnu mnt 5, Tallinn, Estonia"
+  },
+  {
+    "id": "prod-003",
+    "name": "DJI Mini Drone",
+    "description": "Compact drone for aerial photography.",
+    "ownerName": "Eve",
+    "ownerId": "user-103",
+    "pricePerDay": 22,
+    "folder": "drones/mini",
+    "address": "Mustamäe tee 40, Tallinn, Estonia"
+  },
+  {
+    "id": "prod-004",
+    "name": "Fiskars Axe",
+    "description": "Lightweight axe for outdoor camping.",
+    "ownerName": "Dan",
+    "ownerId": "user-104",
+    "pricePerDay": 6,
+    "folder": "tools/axe",
+    "address": "Tondi 2, Tallinn, Estonia"
+  },
+  {
+    "id": "prod-005",
+    "name": "Yamaha Generator",
+    "description": "Portable generator for backup power.",
+    "ownerName": "Carol",
+    "ownerId": "user-105",
+    "pricePerDay": 18,
+    "folder": "generators/yamaha",
+    "address": "Narva mnt 23, Tallinn, Estonia"
+  }
+]
