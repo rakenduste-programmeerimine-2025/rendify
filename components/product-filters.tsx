@@ -59,7 +59,7 @@ export function ProductFilters({
                             Max price: {maxPrice}€ / day
                         </Label>
                         <Input
-                            className="p-0"
+                            className="p-0 accent-primary"
                             id="maxPrice"
                             type="range"
                             min={5}
@@ -74,7 +74,7 @@ export function ProductFilters({
                             Max distance {distance} km
                         </Label>
                         <Input
-                            className="p-0"
+                            className="p-0 accent-primary"
                             id="maxDistance"
                             type="range"
                             max={100}

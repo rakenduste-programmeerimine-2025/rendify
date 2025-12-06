@@ -6,6 +6,7 @@ import {useState} from "react";
 import products from '../products.json';
 import {ProductFilters} from "@/components/product-filters";
 import {Button} from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Home() {
     const [name, setName] = useState("");
@@ -35,6 +36,7 @@ export default function Home() {
 
             <div className="w-full grid grid-cols-3 gap-6 h-fit">
                 {products.map((product) => (
+
                     <Card key={product.id} className={"h-full flex flex-col"}>
                         <CardHeader>
                             <CardTitle className="text-base">{product.name}</CardTitle>
@@ -47,7 +49,9 @@ export default function Home() {
                         </CardHeader>
                         <CardContent className={"flex flex-row justify-between align-items-bottom items-center mt-auto"}>
                             <Label className={"text-muted-foreground"}>{product.pricePerDay}€ per day</Label>
-                            <Button>View</Button>
+                            <Link href={`Item/${product.id}`}>
+                                <Button>View</Button>
+                            </Link>
                         </CardContent>
                     </Card>
                 ))}

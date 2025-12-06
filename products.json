@@ -6,8 +6,9 @@
     "ownerName": "Alice",
     "ownerId": "user-101",
     "pricePerDay": 12.5,
-    "folder": "tools/electric-saw",
-    "address": "Kaubamaja 10, Tallinn, Estonia"
+    "group": "Tools",
+    "address": "Kaubamaja 10, Tallinn, Estonia",
+    "disabledDates": ["2025-12-10", "2025-12-11", "2025-12-12", "2025-12-13", "2025-12-14", "2025-12-15"]
   },
   {
     "id": "prod-002",
@@ -16,8 +17,9 @@
     "ownerName": "Bob",
     "ownerId": "user-102",
     "pricePerDay": 8,
-    "folder": "tools/drill",
-    "address": "Pärnu mnt 5, Tallinn, Estonia"
+    "group": "Tools",
+    "address": "Pärnu mnt 5, Tallinn, Estonia",
+    "disabledDates": ["2025-11-15", "2025-11-16"]
   },
   {
     "id": "prod-003",
@@ -26,8 +28,9 @@
     "ownerName": "Eve",
     "ownerId": "user-103",
     "pricePerDay": 22,
-    "folder": "drones/mini",
-    "address": "Mustamäe tee 40, Tallinn, Estonia"
+    "group": "Drones",
+    "address": "Mustamäe tee 40, Tallinn, Estonia",
+    "disabledDates": ["2025-12-24", "2025-12-25", "2025-12-31"]
   },
   {
     "id": "prod-004",
@@ -36,8 +39,9 @@
     "ownerName": "Dan",
     "ownerId": "user-104",
     "pricePerDay": 6,
-    "folder": "tools/axe",
-    "address": "Tondi 2, Tallinn, Estonia"
+    "group": "Tools",
+    "address": "Tondi 2, Tallinn, Estonia",
+    "disabledDates": []
   },
   {
     "id": "prod-005",
@@ -46,7 +50,8 @@
     "ownerName": "Carol",
     "ownerId": "user-105",
     "pricePerDay": 18,
-    "folder": "generators/yamaha",
-    "address": "Narva mnt 23, Tallinn, Estonia"
+    "group": "Generators",
+    "address": "Narva mnt 23, Tallinn, Estonia",
+    "disabledDates": ["2025-12-01", "2025-12-02", "2025-12-03"]
   }
 ]
