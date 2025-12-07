@@ -38,7 +38,9 @@ export default function Home() {
                         rent_dates (
                         *
                         )
-                    `);
+                    `)
+                .lte("price_cents", maxPrice * 100)
+                .or(`title.like.%${name}%,description.like.%${name}%`)
 
             if (itemResult.error) {
                 console.log("Error fetching item:", itemResult.error);
@@ -47,7 +49,7 @@ export default function Home() {
 
             setItems(itemResult.data);
         })();
-    }, []);
+    }, [name, maxPrice]);
 
     return (
         <div className="flex min-h-svh w-full p-6 md:p-10 gap-6">
