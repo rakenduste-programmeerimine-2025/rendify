@@ -1,12 +1,18 @@
 "use client";
 
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {useState} from "react";
-import products from '../products.json';
-import {ProductFilters} from "@/components/product-filters";
-import {Button} from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { ProductFilters } from "@/components/product-filters";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Database } from "@/lib/supabase/database.types";
+import { createClient } from "@/lib/supabase/client";
+import { notFound } from "next/navigation";
+
+type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
+    rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
+}
 
 export default function Home() {
     const [name, setName] = useState("");
@@ -18,6 +24,30 @@ export default function Home() {
     const tomorrowISO = tomorrow.toISOString().split('T')[0];
     const [startDate, setStartDate] = useState(tomorrowISO);
     const [endDate, setEndDate] = useState(tomorrowISO);
+
+    let [items, setItems] = useState<Item[]>([]);
+
+    useEffect(() => {
+        (async () => {
+            const supabase = await createClient();
+
+            const itemResult = await supabase
+                .from("rent_offers_with_owner")
+                .select(`
+                        *,
+                        rent_dates (
+                        *
+                        )
+                    `);
+
+            if (itemResult.error) {
+                console.log("Error fetching item:", itemResult.error);
+                notFound();
+            };
+
+            setItems(itemResult.data);
+        })();
+    }, []);
 
     return (
         <div className="flex min-h-svh w-full p-6 md:p-10 gap-6">
@@ -35,21 +65,21 @@ export default function Home() {
             />
 
             <div className="w-full grid grid-cols-3 gap-6 h-fit">
-                {products.map((product) => (
+                {items.map((product) => (
 
                     <Card key={product.id} className={"h-full flex flex-col"}>
                         <CardHeader>
-                            <CardTitle className="text-base">{product.name}</CardTitle>
+                            <CardTitle className="text-base">{product.title}</CardTitle>
                             <CardDescription>
                                 {product.description}
                             </CardDescription>
                             <CardDescription>
-                                {product.address}
+                                {product.location}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className={"flex flex-row justify-between align-items-bottom items-center mt-auto"}>
-                            <Label className={"text-muted-foreground"}>{product.pricePerDay}€ per day</Label>
-                            <Link href={`Item/${product.id}`}>
+                            <Label className={"text-muted-foreground"}>{product.price_cents / 100}€ per day</Label>
+                            <Link href={`item/${product.id}`}>
                                 <Button>View</Button>
                             </Link>
                         </CardContent>

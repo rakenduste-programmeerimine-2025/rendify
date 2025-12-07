@@ -1,0 +1,4 @@
+[ ] Add canselation to dates
+[ ] Add message that is sent to user how wants to rent
+[ ] Add rejection to rent requests
+[ ] Add messages

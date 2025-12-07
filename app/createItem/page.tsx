@@ -1,22 +1,39 @@
 "use client";
 
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
-import { useRouter } from "next/navigation";
-import {useState} from "react";
-import {Input} from "@/components/ui/input";
-import {Textarea} from "@/components/ui/textarea";
+import { redirect, useRouter } from "next/navigation";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/lib/supabase/client";
 
 export default function CreateItem() {
     const router = useRouter();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [group, setGroup] = useState("");
-    const [price, setPrice] = useState("");
+    const [price, setPrice] = useState(0);
 
-    function createItem(){
-        console.log("book");
+    async function createItem() {
+        const supabase = await createClient();
+
+        const { data, error } = await supabase
+            .from("rent_offers")
+            .insert({
+                title,
+                description,
+                price_cents: price / 100,
+            })
+            .select("id");
+
+        if (error) {
+            console.error("Error creating rent offer:", error);
+            return
+        }
+
+        redirect("/item/" + data[0].id);
     }
 
     return (
@@ -58,7 +75,7 @@ export default function CreateItem() {
                         type="number"
                         placeholder={"15.00"}
                         value={price}
-                        onChange={(e) => setPrice(e.target.value)}
+                        onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
                     />
                     <div className={"flex gap-3"}>
                         <Button variant={"ghost"} className={"border"}>Cancel</Button>
@@ -67,8 +84,9 @@ export default function CreateItem() {
                                 title.length == 0 ||
                                 group.length == 0 ||
                                 description.length == 0 ||
-                                price.length == 0
+                                price == 0
                             }
+                            onClick={createItem}
                             variant={"default"}
                         >
                             Add item
