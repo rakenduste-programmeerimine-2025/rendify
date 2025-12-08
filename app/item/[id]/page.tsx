@@ -1,4 +1,4 @@
-"use client"; // если нужен клиентский компонент
+"use client";
 
 import { notFound, useParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,12 +18,12 @@ type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
 
 export default function ItemPage() {
     const router = useRouter();
-    let { id } = useParams();
+    const { id } = useParams();
     if (!id) notFound();
     if (typeof id !== "string") notFound();
     if (id == "") notFound();
 
-    let [item, setItem] = useState<Item | null>(null);
+    const [item, setItem] = useState<Item | null>(null);
 
     useEffect(() => {
         (async () => {

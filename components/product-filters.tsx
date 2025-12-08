@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {AppSelect} from "@/components/ui/select";
+import {TOOL_CATEGORIES} from "@/app/tool-categories";
 
 interface ProductFiltersProps {
     name: string;
@@ -20,6 +22,8 @@ interface ProductFiltersProps {
     setStartDate: React.Dispatch<React.SetStateAction<string>>;
     endDate: string;
     setEndDate: React.Dispatch<React.SetStateAction<string>>;
+    category: string;
+    setCategory: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export function ProductFilters({
@@ -33,9 +37,11 @@ export function ProductFilters({
                                    setStartDate,
                                    endDate,
                                    setEndDate,
+                                   category,
+                                   setCategory,
                                }: ProductFiltersProps) {
     return (
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-xs">
             <Card>
                 <CardHeader>
                     <CardTitle className="text-2xl">Filters</CardTitle>
@@ -51,6 +57,18 @@ export function ProductFilters({
                             placeholder="Search by item name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-0.5">
+                        <Label className="relative text-base text-foreground font-medium">
+                            Category
+                        </Label>
+                        <AppSelect
+                            value={category}
+                            onChange={setCategory}
+                            placeholder="Select category"
+                            options={TOOL_CATEGORIES}
                         />
                     </div>
 

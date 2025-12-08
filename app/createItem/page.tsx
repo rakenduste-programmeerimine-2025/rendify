@@ -2,18 +2,20 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MapPin, Calendar } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
+import { TOOL_CATEGORIES } from "../tool-categories";
+import { AppSelect } from "@/components/ui/select";
 
 export default function CreateItem() {
     const router = useRouter();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [group, setGroup] = useState("");
+    const [category, setCategory] = useState<string>("");
     const [price, setPrice] = useState(0);
 
     async function createItem() {
@@ -56,11 +58,11 @@ export default function CreateItem() {
                         onChange={(e) => setTitle(e.target.value)}
                     />
                     <label>Group*</label>
-                    <Input
-                        required
-                        placeholder={"e.g. Tools"}
-                        value={group}
-                        onChange={(e) => setGroup(e.target.value)}
+                    <AppSelect
+                        value={category}
+                        onChange={setCategory}
+                        placeholder="Select category"
+                        options={TOOL_CATEGORIES}
                     />
                     <label>Description*</label>
                     <Textarea

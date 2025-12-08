@@ -9,6 +9,9 @@ import Link from "next/link";
 import { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/client";
 import { notFound } from "next/navigation";
+import {DateRangePicker} from "@/components/date-range-picker";
+import {DateRange} from "react-day-picker";
+import products from "../products.json";
 
 type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
     rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
@@ -16,8 +19,15 @@ type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
 
 export default function Home() {
     const [name, setName] = useState("");
-    const [maxPrice, setMaxPrice] = useState(10);
+    const [maxPrice, setMaxPrice] = useState(60);
     const [distance, setDistance] = useState(15);
+    const [category, setCategory] = useState<string>("");
+
+    // Remove later
+    const item = products[0];
+    const [range, setRange] = useState<DateRange | undefined>();
+    const disabledDates: Date[] =
+        item?.disabledDates?.map((d: string) => new Date(d)) ?? [];
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -25,7 +35,7 @@ export default function Home() {
     const [startDate, setStartDate] = useState(tomorrowISO);
     const [endDate, setEndDate] = useState(tomorrowISO);
 
-    let [items, setItems] = useState<Item[]>([]);
+    const [items, setItems] = useState<Item[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -52,7 +62,7 @@ export default function Home() {
     }, [name, maxPrice]);
 
     return (
-        <div className="flex min-h-svh w-full p-6 md:p-10 gap-6">
+        <div className="flex min-h-svh w-full p-6 md:p-10 gap-6 max-w-6xl">
             <ProductFilters
                 name={name}
                 setName={setName}
@@ -64,11 +74,12 @@ export default function Home() {
                 setStartDate={setStartDate}
                 endDate={endDate}
                 setEndDate={setEndDate}
+                category={category}
+                setCategory={setCategory}
             />
 
             <div className="w-full grid grid-cols-3 gap-6 h-fit">
                 {items.map((product) => (
-
                     <Card key={product.id} className={"h-full flex flex-col"}>
                         <CardHeader>
                             <CardTitle className="text-base">{product.title}</CardTitle>
