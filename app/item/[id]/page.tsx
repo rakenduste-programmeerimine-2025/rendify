@@ -1,4 +1,4 @@
-"use client"; // если нужен клиентский компонент
+"use client";
 
 import { notFound, useParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { useEffect, useState } from "react";
-import { format, differenceInCalendarDays, addDays, isSameDay, set, setDate } from "date-fns";
+import {format, differenceInCalendarDays, addDays, isSameDay, set, setDate, startOfDay, isBefore} from "date-fns";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/database.types";
+
 
 type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
     rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
@@ -18,12 +19,12 @@ type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
 
 export default function ItemPage() {
     const router = useRouter();
-    let { id } = useParams();
+    const { id } = useParams();
     if (!id) notFound();
     if (typeof id !== "string") notFound();
     if (id == "") notFound();
 
-    let [item, setItem] = useState<Item | null>(null);
+    const [item, setItem] = useState<Item | null>(null);
 
     useEffect(() => {
         (async () => {
@@ -51,8 +52,30 @@ export default function ItemPage() {
     }, []);
 
     const [range, setRange] = useState<DateRange | undefined>();
+
+    type RentDate = {
+        from: string;
+        to: string;
+    };
+
+    const today = startOfDay(new Date());
+
     const disabledDates: Date[] =
-        item?.rent_dates?.map(date => new Date(date.from)) ?? [];
+        item?.rent_dates
+            ?.flatMap((r: RentDate) => {
+                const from = startOfDay(new Date(r.from));
+                const to = startOfDay(new Date(r.to));
+
+                const days = differenceInCalendarDays(to, from) + 1;
+
+                return Array.from({ length: days }, (_, i) => {
+                    const day = addDays(from, i);
+                    return isBefore(day, today) ? null : day;
+                }).filter((d): d is Date => d !== null);
+            }) ?? [];
+
+    const futureRanges =
+        item?.rent_dates?.filter((r) => !isBefore(startOfDay(new Date(r.to)), today)) ?? [];
 
     function countActiveDays(range: DateRange | undefined, disabled: Date[]): number {
         if (!range?.from || !range?.to) return 0;
@@ -121,7 +144,8 @@ export default function ItemPage() {
                         <label>{item?.user_name}</label>
                     </CardContent>
                 </Card>
-                <Card>
+
+                <Card className={"max-w-min"}>
                     <CardHeader>
                         <CardTitle className="text-2xl">Renting info</CardTitle>
                     </CardHeader>
@@ -134,18 +158,22 @@ export default function ItemPage() {
                             onChange={setRange}
                             disabledDates={disabledDates}
                         />
-                        {disabledDates.length > 0 &&
+                        {futureRanges.length > 0 && (
                             <div>
-                                <CardDescription>
-                                    Reserved dates:
-                                </CardDescription>
-                                <div className={"flex gap-3 flex-wrap"}>
-                                    {disabledDates.map((date, index) => (
-                                        <div className={"border border-b p-1 rounded-lg text-xs"} key={index}>{format(date, "dd.MM.yyyy")}</div>
+                                <CardDescription>Reserved dates:</CardDescription>
+                                <div className="flex gap-3 flex-wrap">
+                                    {futureRanges.map((date, index) => (
+                                        <div
+                                            key={index}
+                                            className="border border-b p-1 rounded-lg text-xs"
+                                        >
+                                            {format(new Date(date.from), "dd.MM.yyyy")} -{" "}
+                                            {format(new Date(date.to), "dd.MM.yyyy")}
+                                        </div>
                                     ))}
                                 </div>
                             </div>
-                        }
+                        )}
                         {nights > 0 &&
                             <div className={"rounded-2xl bg-muted p-3 gap-1.5 flex flex-col"}>
                                 <div className={"flex justify-between"}>

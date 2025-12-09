@@ -23,6 +23,8 @@ export function SignUpForm({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -75,34 +77,56 @@ export function SignUpForm({
               <div className="grid gap-2">
                 <Label htmlFor="email">First Name</Label>
                 <Input
-                  id="first_name"
-                  type="first_name"
-                  placeholder="John"
-                  required
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                    id="first_name"
+                    type="first_name"
+                    placeholder="John"
+                    required
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Last Name</Label>
                 <Input
-                  id="last_name"
-                  type="last_name"
-                  placeholder="Doe"
-                  required
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                    id="last_name"
+                    type="last_name"
+                    placeholder="Doe"
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Address</Label>
+                <Input
+                    id="address"
+                    type="address"
+                    placeholder="John"
+                    required
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Phone</Label>
+                <Input
+                    id="phone"
+                    type="phone"
+                    placeholder="+372 555 555 55"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -110,11 +134,11 @@ export function SignUpForm({
                   <Label htmlFor="password">Password</Label>
                 </div>
                 <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -122,11 +146,11 @@ export function SignUpForm({
                   <Label htmlFor="repeat-password">Repeat Password</Label>
                 </div>
                 <Input
-                  id="repeat-password"
-                  type="password"
-                  required
-                  value={repeatPassword}
-                  onChange={(e) => setRepeatPassword(e.target.value)}
+                    id="repeat-password"
+                    type="password"
+                    required
+                    value={repeatPassword}
+                    onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}

@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/client";
 import { notFound } from "next/navigation";
+import {ArrowLeft, MapPin} from "lucide-react";
 
 type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
     rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
@@ -16,8 +17,9 @@ type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
 
 export default function Home() {
     const [name, setName] = useState("");
-    const [maxPrice, setMaxPrice] = useState(10);
+    const [maxPrice, setMaxPrice] = useState(60);
     const [distance, setDistance] = useState(15);
+    const [category, setCategory] = useState<string>("");
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -25,7 +27,7 @@ export default function Home() {
     const [startDate, setStartDate] = useState(tomorrowISO);
     const [endDate, setEndDate] = useState(tomorrowISO);
 
-    let [items, setItems] = useState<Item[]>([]);
+    const [items, setItems] = useState<Item[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -52,7 +54,7 @@ export default function Home() {
     }, [name, maxPrice]);
 
     return (
-        <div className="flex min-h-svh w-full p-6 md:p-10 gap-6">
+        <div className="flex min-h-svh w-full p-6 md:p-10 gap-6 max-w-6xl">
             <ProductFilters
                 name={name}
                 setName={setName}
@@ -64,20 +66,23 @@ export default function Home() {
                 setStartDate={setStartDate}
                 endDate={endDate}
                 setEndDate={setEndDate}
+                category={category}
+                setCategory={setCategory}
             />
 
             <div className="w-full grid grid-cols-3 gap-6 h-fit">
                 {items.map((product) => (
-
                     <Card key={product.id} className={"h-full flex flex-col"}>
                         <CardHeader>
                             <CardTitle className="text-base">{product.title}</CardTitle>
-                            <CardDescription>
+                            <CardDescription className="line-clamp-2">
                                 {product.description}
                             </CardDescription>
-                            <CardDescription>
-                                {product.location}
-                            </CardDescription>
+                            {product.location &&
+                                <CardDescription className={"flex gap-2 items-center"}>
+                                    <MapPin size="16" strokeWidth={2} />{product.location}
+                                </CardDescription>
+                            }
                         </CardHeader>
                         <CardContent className={"flex flex-row justify-between align-items-bottom items-center mt-auto"}>
                             <Label className={"text-muted-foreground"}>{product.price_cents / 100}€ per day</Label>

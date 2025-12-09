@@ -1,10 +1,11 @@
-// components/ui/range-calendar.tsx
 "use client";
 
 import * as React from "react";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
+import { enGB } from "date-fns/locale";
+import { isSameDay } from "date-fns";
 
 type RangeCalendarProps = {
     value: DateRange | undefined;
@@ -19,6 +20,9 @@ export function DateRangePicker({
                                   disabledDates = [],
                                   className,
                               }: RangeCalendarProps) {
+
+    const today = new Date();
+
     return (
         <div className={cn("rounded-2xl border border-b p-4", className)}>
             <Calendar
@@ -26,10 +30,14 @@ export function DateRangePicker({
                 selected={value}
                 onSelect={onChange}
                 numberOfMonths={1}
-                disabled={disabledDates}
+                locale={enGB}
+                disabled={[
+                    { before: today },
+                    (day) => disabledDates.some((d) => isSameDay(d, day)),
+                ]}
+                fromMonth={today}
                 className={cn(
                     "mx-auto w-full text-sm",
-                    // стили диапазона, как на скрине
                     "[&_.rdp-day_selected]:bg-[#5b6bff] [&_.rdp-day_selected]:text-white",
                     "[&_.rdp-day_range_start]:rounded-l-full [&_.rdp-day_range_end]:rounded-r-full",
                     "[&_.rdp-day_range_middle]:bg-[#e0e4ff] [&_.rdp-day_range_middle]:text-slate-900",
