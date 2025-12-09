@@ -9,9 +9,7 @@ import Link from "next/link";
 import { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/client";
 import { notFound } from "next/navigation";
-import {DateRangePicker} from "@/components/date-range-picker";
-import {DateRange} from "react-day-picker";
-import products from "../products.json";
+import {ArrowLeft, MapPin} from "lucide-react";
 
 type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
     rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
@@ -22,12 +20,6 @@ export default function Home() {
     const [maxPrice, setMaxPrice] = useState(60);
     const [distance, setDistance] = useState(15);
     const [category, setCategory] = useState<string>("");
-
-    // Remove later
-    const item = products[0];
-    const [range, setRange] = useState<DateRange | undefined>();
-    const disabledDates: Date[] =
-        item?.disabledDates?.map((d: string) => new Date(d)) ?? [];
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -83,12 +75,14 @@ export default function Home() {
                     <Card key={product.id} className={"h-full flex flex-col"}>
                         <CardHeader>
                             <CardTitle className="text-base">{product.title}</CardTitle>
-                            <CardDescription>
+                            <CardDescription className="line-clamp-2">
                                 {product.description}
                             </CardDescription>
-                            <CardDescription>
-                                {product.location}
-                            </CardDescription>
+                            {product.location &&
+                                <CardDescription className={"flex gap-2 items-center"}>
+                                    <MapPin size="16" strokeWidth={2} />{product.location}
+                                </CardDescription>
+                            }
                         </CardHeader>
                         <CardContent className={"flex flex-row justify-between align-items-bottom items-center mt-auto"}>
                             <Label className={"text-muted-foreground"}>{product.price_cents / 100}€ per day</Label>

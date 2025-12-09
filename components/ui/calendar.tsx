@@ -193,7 +193,8 @@ function CalendarDayButton({
       data-day={day.date.toLocaleDateString()}
       data-selected-single={
           modifiers.selected &&
-          !modifiers.range_middle
+          !modifiers.range_middle &&
+          (modifiers.range_start && modifiers.range_end)
       }
       data-range-start={modifiers.range_start}
       data-range-end={modifiers.range_end}
