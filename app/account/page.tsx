@@ -10,7 +10,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {Delete, Eye, Pencil, Trash} from "lucide-react";
+import { Delete, Eye, Pencil, Trash } from "lucide-react";
 
 type Rented = Database["public"]["Tables"]["rent_dates"]["Row"] & {
     rent_offer: {
@@ -93,6 +93,21 @@ export default function Page() {
         { id: "rented", label: "Rented" },
         { id: "rentedOut", label: "Rented out" }
     ]
+
+    async function deleteItem(id: number) {
+        const supabase = await createClient();
+
+        const { data, error } = await supabase
+            .from("rent_offers")
+            .delete()
+            .eq("id", id)
+
+        if (error) {
+            console.error("Error creating rent offer:", error);
+            return
+        }
+        setItems(items.filter(item => item.id !== id));
+    }
 
     return (
         <div className="flex flex-col min-h-svh w-full p-6 md:p-10 gap-6 max-w-6xl">
@@ -188,11 +203,11 @@ export default function Page() {
                                     <div className={"flex gap-2"}>
                                         <Link href={`item/${item.id}`}>
                                             <Button variant={"outline"} className={"p-2"}>
-                                                <Eye size={16} strokeWidth={2}/>
+                                                <Eye size={16} strokeWidth={2} />
                                             </Button>
                                         </Link>
-                                        <Button variant={"outline"} className={"p-2"}><Pencil size={16} strokeWidth={2}/></Button>
-                                        <Button variant={"outline"} className={"p-2 hover:bg-red-500 hover:text-black"}><Trash size={16} strokeWidth={2}/></Button>
+                                        <Button variant={"outline"} className={"p-2"}><Pencil size={16} strokeWidth={2} /></Button>
+                                        <Button variant={"outline"} className={"p-2 hover:bg-red-500 hover:text-black"} onClick={() => deleteItem(item.id)}><Trash size={16} strokeWidth={2} /></Button>
                                     </div>
                                 </CardHeader>
                             </Card>
@@ -218,7 +233,7 @@ export default function Page() {
                                     <div className={"flex gap-2"}>
                                         <Link href={`item/${rented.id}`}>
                                             <Button variant={"outline"} className={"p-2"}>
-                                                <Eye size={16} strokeWidth={2}/>
+                                                <Eye size={16} strokeWidth={2} />
                                             </Button>
                                         </Link>
                                     </div>
@@ -246,7 +261,7 @@ export default function Page() {
                                     <div className={"flex gap-2"}>
                                         <Link href={`item/${rented.id}`}>
                                             <Button variant={"outline"} className={"p-2"}>
-                                                <Eye size={16} strokeWidth={2}/>
+                                                <Eye size={16} strokeWidth={2} />
                                             </Button>
                                         </Link>
                                     </div>
