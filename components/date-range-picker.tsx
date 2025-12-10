@@ -35,6 +35,7 @@ export function DateRangePicker({
                     { before: today },
                     (day) => disabledDates.some((d) => isSameDay(d, day)),
                 ]}
+                excludeDisabled
                 fromMonth={today}
                 className={cn(
                     "mx-auto w-full text-sm",
