@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/client";
 import { notFound } from "next/navigation";
-import {ArrowLeft, MapPin} from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
 
 type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
     rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
@@ -42,6 +42,7 @@ export default function Home() {
                         )
                     `)
                 .lte("price_cents", maxPrice * 100)
+                .eq("category", category)
                 .or(`title.like.%${name}%,description.like.%${name}%`)
 
             if (itemResult.error) {
