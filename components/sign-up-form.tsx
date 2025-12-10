@@ -15,21 +15,33 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AddressInput } from "@/components/address-input";
+
+type Suggestion = {
+  id: string | number;
+  formatted: string;
+  lat?: number;
+  lon?: number;
+};
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [selectedAddress, setSelectedAddress] = useState<Suggestion | null>(null);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+
+  const isAddressValid =
+      !!selectedAddress && address === selectedAddress.formatted;
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,13 +121,10 @@ export function SignUpForm({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Address</Label>
-                <Input
-                    id="address"
-                    type="address"
-                    placeholder="John"
-                    required
+                <AddressInput
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={setAddress}
+                    onValidAddressChange={setSelectedAddress}
                 />
               </div>
               <div className="grid gap-2">
