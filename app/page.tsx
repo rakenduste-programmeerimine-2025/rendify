@@ -52,7 +52,7 @@ export default function Home() {
 
             setItems(itemResult.data);
         })();
-    }, [name, maxPrice]);
+    }, [name, maxPrice, category]);
 
     return (
         <div className="flex min-h-svh w-full p-6 md:p-10 gap-6 max-w-6xl">
