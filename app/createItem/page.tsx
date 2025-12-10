@@ -39,7 +39,7 @@ export default function CreateItem() {
             const user = await getUser();
             setUser(user);
 
-            const accAddress = (u as any)?.user_metadata?.address as string | undefined;
+            const accAddress = (user as any)?.user_metadata?.address as string | undefined;
             if (accAddress) {
                 setAddress(accAddress);
             }
@@ -61,8 +61,9 @@ export default function CreateItem() {
             .insert({
                 title,
                 description,
+                category,
                 price_cents: price * 100,
-                address: finalAddress,
+                location: finalAddress,
             })
             .select("id");
 
