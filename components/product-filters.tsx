@@ -61,9 +61,22 @@ export function ProductFilters({
                     </div>
 
                     <div className="flex flex-col gap-0.5">
-                        <Label className="relative text-base text-foreground font-medium">
-                            Category
-                        </Label>
+                        <div className={"flex items-center justify-between"}>
+                            <Label className="relative text-base text-foreground font-medium">
+                                Category
+                            </Label>
+
+                            {category && (
+                                <button
+                                    type="button"
+                                    onClick={() => setCategory("")}
+                                    className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
+
                         <AppSelect
                             value={category}
                             onChange={setCategory}
