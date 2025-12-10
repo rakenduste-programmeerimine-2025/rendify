@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {Delete, Eye, Pencil, Trash} from "lucide-react";
 
 type Rented = Database["public"]["Tables"]["rent_dates"]["Row"] & {
     rent_offer: {
@@ -162,7 +163,7 @@ export default function Page() {
                                     onClick={() => setActiveCard(id)}
                                     className={`text-base ${isActive ? "text-foreground" : "text-muted-foreground"}`}
                                 >
-                                    {label}
+                                    {label} ({id == "myItems" && items.length}{id == "rented" && rented.length}{id == "rentedOut" && rentedOut.length})
                                 </Label>
                             )
                         })}
@@ -170,72 +171,86 @@ export default function Page() {
                     {
                         activeCard === "myItems" &&
                         items.map((item) => (
-                            <Card key={item.id} className={"h-full flex flex-col"}>
-                                <CardHeader>
-                                    <CardTitle className="text-base">{item.title}</CardTitle>
-                                    <CardDescription>
-                                        {item.description}
-                                    </CardDescription>
-                                    <CardDescription>
-                                        {item.location}
-                                    </CardDescription>
+                            <Card key={item.id} className={"h-fit flex flex-col"}>
+                                <CardHeader className={"flex gap-6 flex-row"}>
+                                    <div className={"w-full flex flex-col"}>
+                                        <CardTitle className="text-base">{item.title}</CardTitle>
+                                        <CardDescription>
+                                            {item.description}
+                                        </CardDescription>
+                                        <CardDescription>
+                                            {item.location}
+                                        </CardDescription>
+                                        <CardDescription>
+                                            {item.price_cents / 100}€ per day
+                                        </CardDescription>
+                                    </div>
+                                    <div className={"flex gap-2"}>
+                                        <Link href={`item/${item.id}`}>
+                                            <Button variant={"outline"} className={"p-2"}>
+                                                <Eye size={16} strokeWidth={2}/>
+                                            </Button>
+                                        </Link>
+                                        <Button variant={"outline"} className={"p-2"}><Pencil size={16} strokeWidth={2}/></Button>
+                                        <Button variant={"outline"} className={"p-2 hover:bg-red-500 hover:text-black"}><Trash size={16} strokeWidth={2}/></Button>
+                                    </div>
                                 </CardHeader>
-                                <CardContent className={"flex flex-row justify-between align-items-bottom items-center mt-auto"}>
-                                    <Label className={"text-muted-foreground"}>{item.price_cents / 100}€ per day</Label>
-                                    <Link href={`item/${item.id}`}>
-                                        <Button>View</Button>
-                                    </Link>
-                                </CardContent>
                             </Card>
                         ))
                     }
                     {
                         activeCard === "rented" &&
                         rented.map((rented) => (
-                            <Card key={rented.id} className={"h-full flex flex-col"}>
-                                <CardHeader>
-                                    <CardTitle className="text-base">Rented: {rented.rent_offer.title}</CardTitle>
-                                    <CardDescription>
-                                        {rented.rent_offer.location}
-                                    </CardDescription>
-                                    <CardDescription>
-                                        From: {rented.from}
-                                    </CardDescription>
-                                    <CardDescription>
-                                        To: {rented.to}
-                                    </CardDescription>
+                            <Card key={rented.id} className={"h-fit flex flex-col"}>
+                                <CardHeader className={"flex gap-6 flex-row"}>
+                                    <div className={"w-full flex flex-col"}>
+                                        <CardTitle className="text-base">{rented.rent_offer.title}</CardTitle>
+                                        <CardDescription>
+                                            {rented.rent_offer.location}
+                                        </CardDescription>
+                                        <CardDescription>
+                                            From: {rented.from}
+                                        </CardDescription>
+                                        <CardDescription>
+                                            To: {rented.to}
+                                        </CardDescription>
+                                    </div>
+                                    <div className={"flex gap-2"}>
+                                        <Link href={`item/${rented.id}`}>
+                                            <Button variant={"outline"} className={"p-2"}>
+                                                <Eye size={16} strokeWidth={2}/>
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </CardHeader>
-                                <CardContent className={"flex flex-row justify-between align-items-bottom items-center mt-auto"}>
-                                    <Label className={"text-muted-foreground"}>{rented.price_cents / 100}€ per day</Label>
-                                    <Link href={`item/${rented.rent_offer.id}`}>
-                                        <Button>View</Button>
-                                    </Link>
-                                </CardContent>
                             </Card>
                         ))
                     }
                     {
                         activeCard === "rentedOut" &&
                         rentedOut.map((rented) => (
-                            <Card key={rented.id} className={"h-full flex flex-col"}>
-                                <CardHeader>
-                                    <CardTitle className="text-base">Rented Out: {rented.rent_offer.title}</CardTitle>
-                                    <CardDescription>
-                                        {rented.renter_name}
-                                    </CardDescription>
-                                    <CardDescription>
-                                        From: {rented.from}
-                                    </CardDescription>
-                                    <CardDescription>
-                                        To: {rented.to}
-                                    </CardDescription>
+                            <Card key={rented.id} className={"h-fit flex flex-col"}>
+                                <CardHeader className={"flex gap-6 flex-row"}>
+                                    <div className={"w-full flex flex-col"}>
+                                        <CardTitle className="text-base">{rented.rent_offer.title}</CardTitle>
+                                        <CardDescription>
+                                            {rented.renter_name}
+                                        </CardDescription>
+                                        <CardDescription>
+                                            From: {rented.from}
+                                        </CardDescription>
+                                        <CardDescription>
+                                            To: {rented.to}
+                                        </CardDescription>
+                                    </div>
+                                    <div className={"flex gap-2"}>
+                                        <Link href={`item/${rented.id}`}>
+                                            <Button variant={"outline"} className={"p-2"}>
+                                                <Eye size={16} strokeWidth={2}/>
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </CardHeader>
-                                <CardContent className={"flex flex-row justify-between align-items-bottom items-center mt-auto"}>
-                                    <Label className={"text-muted-foreground"}>{rented.price_cents / 100}€ per day</Label>
-                                    <Link href={`item/${rented.rent_offer.id}`}>
-                                        <Button>View</Button>
-                                    </Link>
-                                </CardContent>
                             </Card>
                         ))
                     }
