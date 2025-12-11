@@ -39,27 +39,27 @@ export type Database = {
   }
   public: {
     Tables: {
-      messages: {
+      chats: {
         Row: {
           created_at: string
           from_id: string
           id: number
-          message: string | null
           to_id: string
+          updated_at: string | null
         }
         Insert: {
           created_at?: string
           from_id?: string
           id?: number
-          message?: string | null
           to_id: string
+          updated_at?: string | null
         }
         Update: {
           created_at?: string
           from_id?: string
           id?: number
-          message?: string | null
           to_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -74,6 +74,45 @@ export type Database = {
             columns: ["to_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          chat_id: number
+          created_at: string
+          id: number
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          chat_id: number
+          created_at?: string
+          id?: number
+          message: string
+          sender_id?: string
+        }
+        Update: {
+          chat_id?: number
+          created_at?: string
+          id?: number
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats_with_names"
             referencedColumns: ["id"]
           },
         ]
@@ -149,6 +188,7 @@ export type Database = {
       }
       rent_offers: {
         Row: {
+          category: string
           created_at: string
           declined: boolean
           description: string | null
@@ -160,6 +200,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category: string
           created_at?: string
           declined?: boolean
           description?: string | null
@@ -171,6 +212,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          category?: string
           created_at?: string
           declined?: boolean
           description?: string | null
@@ -183,7 +225,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "RentOffer_user_id_fkey1"
+            foreignKeyName: "rent_offers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -193,17 +235,126 @@ export type Database = {
       }
     }
     Views: {
+      chats_with_names: {
+        Row: {
+          created_at: string | null
+          from_id: string | null
+          from_name: string | null
+          id: number | null
+          to_id: string | null
+          to_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          from_id?: string | null
+          from_name?: never
+          id?: number | null
+          to_id?: string | null
+          to_name?: never
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          from_id?: string | null
+          from_name?: never
+          id?: number | null
+          to_id?: string | null
+          to_name?: never
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Message_from_id_fkey"
+            columns: ["from_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Message_to_id_fkey1"
+            columns: ["to_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages_with_sender: {
+        Row: {
+          chat_id: number | null
+          created_at: string | null
+          id: number | null
+          message: string | null
+          sender_id: string | null
+          sender_name: string | null
+        }
+        Insert: {
+          chat_id?: number | null
+          created_at?: string | null
+          id?: number | null
+          message?: string | null
+          sender_id?: string | null
+          sender_name?: never
+        }
+        Update: {
+          chat_id?: number | null
+          created_at?: string | null
+          id?: number | null
+          message?: string | null
+          sender_id?: string | null
+          sender_name?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats_with_names"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rent_dates_with_renter: {
         Row: {
-          created_at: string
-          from: string
-          id: number
-          price_cents: number
-          rent_offer: number
-          renter_name: string
-          to: string
+          created_at: string | null
+          from: string | null
+          id: number | null
+          price_cents: number | null
+          rent_offer: number | null
+          renter_name: string | null
+          to: string | null
           type: number | null
-          user_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          from?: string | null
+          id?: number | null
+          price_cents?: number | null
+          rent_offer?: number | null
+          renter_name?: never
+          to?: string | null
+          type?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          from?: string | null
+          id?: number | null
+          price_cents?: number | null
+          rent_offer?: number | null
+          renter_name?: never
+          to?: string | null
+          type?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -224,21 +375,48 @@ export type Database = {
       }
       rent_offers_with_owner: {
         Row: {
-          created_at: string
-          declined: boolean
+          category: string | null
+          created_at: string | null
+          declined: boolean | null
           description: string | null
-          id: number
+          id: number | null
           image_urls: string[] | null
           location: string | null
-          price_cents: number
-          title: string
-          user_id: string
-          user_name: string
+          owner_id: string | null
+          owner_name: string | null
+          price_cents: number | null
+          title: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          declined?: boolean | null
+          description?: string | null
+          id?: number | null
+          image_urls?: string[] | null
+          location?: string | null
+          owner_id?: string | null
+          owner_name?: never
+          price_cents?: number | null
+          title?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          declined?: boolean | null
+          description?: string | null
+          id?: number | null
+          image_urls?: string[] | null
+          location?: string | null
+          owner_id?: string | null
+          owner_name?: never
+          price_cents?: number | null
+          title?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "RentOffer_user_id_fkey1"
-            columns: ["user_id"]
+            foreignKeyName: "rent_offers_user_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
