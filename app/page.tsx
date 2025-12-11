@@ -33,7 +33,7 @@ export default function Home() {
         (async () => {
             const supabase = await createClient();
 
-            const itemResult = await supabase
+            let query = supabase
                 .from("rent_offers_with_owner")
                 .select(`
                         *,
@@ -42,8 +42,15 @@ export default function Home() {
                         )
                     `)
                 .lte("price_cents", maxPrice * 100)
-                .eq("category", category)
                 .or(`title.like.%${name}%,description.like.%${name}%`)
+
+
+            if (category != "") {
+                console.log("category", category);
+                query = query.eq("category", category);
+            }
+
+            const itemResult = await query;
 
             if (itemResult.error) {
                 console.log("Error fetching item:", itemResult.error);
@@ -52,7 +59,7 @@ export default function Home() {
 
             setItems(itemResult.data);
         })();
-    }, [name, maxPrice]);
+    }, [name, maxPrice, category]);
 
     return (
         <div className="flex min-h-svh w-full p-6 md:p-10 gap-6 max-w-6xl">

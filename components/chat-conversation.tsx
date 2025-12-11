@@ -1,43 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SendHorizonal } from "lucide-react";
-import { format } from "date-fns";
-
-type ChatMessage = {
-    id: number;
-    text: string;
-    isMine: boolean;
-    sentAt: string;
-};
-
-type Chat = {
-    id: number;
-    name: string;
-    product: string;
-    messages: ChatMessage[];
-};
+import { format, set } from "date-fns";
+import { type Chat } from "@/app/chat/page";
+import { getUser } from "@/app/account/server";
+import { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 
 export function ChatConversation({ chat }: { chat: Chat }) {
     const messages = chat.messages;
     const [text, setText] = useState("");
+    const [user, setUser] = useState<User | null>(null);
 
-    const handleSend = () => {
+    const handleSend = async () => {
+        const supabase = await createClient();
+
+        const { data, error } = await supabase
+            .from("messages")
+            .insert({
+                chat_id: chat.id,
+                message: text,
+            })
+            .select("*");
+
+        if (error) {
+            console.error("Error creating rent offer:", error);
+            return
+        }
+
+        setText("");
     };
+
+    useEffect(() => {
+        (async () => {
+            const user = await getUser();
+            setUser(user);
+        })();
+    }, []);
 
     return (
         <div className="w-full flex flex-col gap-6">
             <Card className="flex flex-col h-full">
                 <CardHeader>
                     <CardTitle className="text-base font-semibold">
-                        {chat.name}
+                        {chat.from_id == user?.id ? chat.to_name : chat.from_name}
                     </CardTitle>
                     <Label className="text-xs text-muted-foreground">
-                        {chat.product}
+                        {"chat.product"}
                     </Label>
                 </CardHeader>
 
@@ -45,29 +59,21 @@ export function ChatConversation({ chat }: { chat: Chat }) {
                     <div className="flex flex-col gap-4 flex-1">
                         {messages.map((msg) => (
                             <div key={msg.id} className="flex flex-col gap-1">
-                                {!msg.isMine && (
-                                    <span className="text-xs text-muted-foreground">
-                    {chat.name}
-                  </span>
-                                )}
-
                                 <div
-                                    className={`max-w-[70%] rounded-full px-4 py-2 text-sm ${
-                                        msg.isMine
-                                            ? "ml-auto bg-primary text-primary-foreground"
-                                            : "mr-auto bg-muted text-foreground"
-                                    }`}
+                                    className={`max-w-[70%] rounded-full px-4 py-2 text-sm ${msg.sender_id == user?.id
+                                        ? "ml-auto bg-primary text-primary-foreground"
+                                        : "mr-auto bg-muted text-foreground"
+                                        }`}
                                 >
-                                    {msg.text}
+                                    {msg.message}
                                 </div>
 
                                 <span
-                                    className={`mt-0.5 text-xs text-muted-foreground ${
-                                        msg.isMine ? "ml-auto" : "mr-auto"
-                                    }`}
+                                    className={`mt-0.5 text-xs text-muted-foreground ${msg.sender_id == user?.id ? "ml-auto" : "mr-auto"
+                                        }`}
                                 >
-                  {format(new Date(msg.sentAt), "MM/dd")}
-                </span>
+                                    {format(new Date(msg.created_at), "MM/dd")}
+                                </span>
                             </div>
                         ))}
                     </div>
