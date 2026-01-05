@@ -11,7 +11,7 @@ import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/database.types";
-
+import {TOOL_CATEGORIES} from "@/app/tool-categories";
 
 type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
     rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
@@ -130,7 +130,7 @@ export default function ItemPage() {
                 <Card className={"w-full h-fit"}>
                     <CardContent className={"flex flex-col gap-3 pt-6"}>
                         <label>{item?.title}</label>
-                        <div className={"p-1 rounded-lg text-xs bg-primary w-fit"}>Group</div>
+                        <div className={"p-1 rounded-lg text-xs bg-primary w-fit"}>{TOOL_CATEGORIES.find((c) => c.value === item?.category)?.label ?? ""}</div>
                         <label className={"text-xl"}>Description:</label>
                         <label className={"text-muted-foreground"}>{item?.description}</label>
                         <label className={"text-xl"}>Price:</label>
@@ -141,7 +141,7 @@ export default function ItemPage() {
                             {item?.location}
                         </div>
                         <label className={"text-xl"}>Owner:</label>
-                        <label>{item?.user_name}</label>
+                        <label>{item?.owner_name}</label>
                     </CardContent>
                 </Card>
 

@@ -150,7 +150,7 @@ export default function Page() {
                                 </Label>
                                 <Label
                                     className={`relative text-base text-foreground peer-checked:line-through font-medium`}>
-                                    {user?.phone || "Not provided"}
+                                    {user?.phone || "-"}
                                 </Label>
                             </div>
 
@@ -161,7 +161,7 @@ export default function Page() {
                                 </Label>
                                 <Label
                                     className={`relative text-base text-foreground peer-checked:line-through font-medium`}>
-                                    {user?.user_metadata.address || "Not provided"}
+                                    {user?.user_metadata.address || "-"}
                                 </Label>
                             </div>
                         </CardContent>

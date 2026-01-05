@@ -88,7 +88,7 @@ export default function Home() {
                             </CardDescription>
                             {product.location &&
                                 <CardDescription className={"flex gap-2 items-center"}>
-                                    <MapPin size="16" strokeWidth={2} />{product.location}
+                                    <MapPin size="26" strokeWidth={2} />{product.location}
                                 </CardDescription>
                             }
                         </CardHeader>
