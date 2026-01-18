@@ -1,0 +1,18 @@
+export const TOOL_CATEGORIES = [
+    { value: "hand_tools", label: "Hand tools" },
+    { value: "power_tools", label: "Power tools" },
+    { value: "woodworking", label: "Woodworking" },
+    { value: "concrete_masonry", label: "Concrete & masonry" },
+    { value: "gardening_landscaping", label: "Gardening & landscaping" },
+    { value: "painting_finishing", label: "Painting & finishing" },
+    { value: "ladders_scaffolding", label: "Ladders & scaffolding" },
+    { value: "measurement_lasers", label: "Measurement & lasers" },
+    { value: "cleaning", label: "Cleaning equipment" },
+    { value: "generators_lighting", label: "Generators & lighting" },
+    { value: "compressors_air_tools", label: "Compressors & air tools" },
+    { value: "welding", label: "Welding & metalwork" },
+    { value: "material_handling", label: "Material handling" },
+    { value: "heavy_machinery", label: "Heavy machinery" },
+    { value: "safety_equipment", label: "Safety equipment" },
+    { value: "other", label: "Other" },
+];

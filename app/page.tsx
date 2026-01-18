@@ -1,51 +1,106 @@
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import { AuthButton } from "@/components/auth-button";
-import { Hero } from "@/components/hero";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { ConnectSupabaseSteps } from "@/components/tutorial/connect-supabase-steps";
-import { SignUpUserSteps } from "@/components/tutorial/sign-up-user-steps";
-import { hasEnvVars } from "@/lib/utils";
+"use client";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { useEffect, useState } from "react";
+import { ProductFilters } from "@/components/product-filters";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Database } from "@/lib/supabase/database.types";
+import { createClient } from "@/lib/supabase/client";
+import { notFound } from "next/navigation";
+import { ArrowLeft, MapPin } from "lucide-react";
+
+type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
+    rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
+}
 
 export default function Home() {
-  return (
-    <main className="min-h-screen flex flex-col items-center">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/"}>Next.js Supabase Starter</Link>
-              <div className="flex items-center gap-2">
-                <DeployButton />
-              </div>
-            </div>
-            {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
-          </div>
-        </nav>
-        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
-          <Hero />
-          <main className="flex-1 flex flex-col gap-6 px-4">
-            <h2 className="font-medium text-xl mb-4">Next steps</h2>
-            {hasEnvVars ? <SignUpUserSteps /> : <ConnectSupabaseSteps />}
-          </main>
-        </div>
+    const [name, setName] = useState("");
+    const [maxPrice, setMaxPrice] = useState(60);
+    const [distance, setDistance] = useState(15);
+    const [category, setCategory] = useState<string>("");
 
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
-          </p>
-          <ThemeSwitcher />
-        </footer>
-      </div>
-    </main>
-  );
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowISO = tomorrow.toISOString().split('T')[0];
+    const [startDate, setStartDate] = useState(tomorrowISO);
+    const [endDate, setEndDate] = useState(tomorrowISO);
+
+    const [items, setItems] = useState<Item[]>([]);
+
+    useEffect(() => {
+        (async () => {
+            const supabase = await createClient();
+
+            let query = supabase
+                .from("rent_offers_with_owner")
+                .select(`
+                        *,
+                        rent_dates (
+                        *
+                        )
+                    `)
+                .lte("price_cents", maxPrice * 100)
+                .or(`title.like.%${name}%,description.like.%${name}%`)
+
+
+            if (category != "") {
+                console.log("category", category);
+                query = query.eq("category", category);
+            }
+
+            const itemResult = await query;
+
+            if (itemResult.error) {
+                console.log("Error fetching item:", itemResult.error);
+                notFound();
+            };
+
+            setItems(itemResult.data);
+        })();
+    }, [name, maxPrice, category]);
+
+    return (
+        <div className="flex min-h-svh w-full p-6 md:p-10 gap-6 max-w-6xl">
+            <ProductFilters
+                name={name}
+                setName={setName}
+                maxPrice={maxPrice}
+                setMaxPrice={setMaxPrice}
+                distance={distance}
+                setDistance={setDistance}
+                startDate={startDate}
+                setStartDate={setStartDate}
+                endDate={endDate}
+                setEndDate={setEndDate}
+                category={category}
+                setCategory={setCategory}
+            />
+
+            <div className="w-full grid grid-cols-3 gap-6 h-fit">
+                {items.map((product) => (
+                    <Card key={product.id} className={"h-full flex flex-col"}>
+                        <CardHeader>
+                            <CardTitle className="text-base">{product.title}</CardTitle>
+                            <CardDescription className="line-clamp-2">
+                                {product.description}
+                            </CardDescription>
+                            {product.location &&
+                                <CardDescription className={"flex gap-2 items-center"}>
+                                    <MapPin size="16" strokeWidth={2} />{product.location}
+                                </CardDescription>
+                            }
+                        </CardHeader>
+                        <CardContent className={"flex flex-row justify-between align-items-bottom items-center mt-auto"}>
+                            <Label className={"text-muted-foreground"}>{product.price_cents / 100}€ per day</Label>
+                            <Link href={`item/${product.id}`}>
+                                <Button>View</Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    );
 }

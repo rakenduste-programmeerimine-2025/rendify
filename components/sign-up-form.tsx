@@ -15,17 +15,33 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AddressInput } from "@/components/address-input";
+
+type Suggestion = {
+  id: string | number;
+  formatted: string;
+  lat?: number;
+  lon?: number;
+};
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const router = useRouter();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [selectedAddress, setSelectedAddress] = useState<Suggestion | null>(null);
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+
+  const isAddressValid =
+    !!selectedAddress && address === selectedAddress.formatted;
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +59,14 @@ export function SignUpForm({
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        phone,
         options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/account`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            location: address,
+          }
         },
       });
       if (error) throw error;
@@ -67,6 +89,28 @@ export function SignUpForm({
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
+                <Label htmlFor="email">First Name</Label>
+                <Input
+                  id="first_name"
+                  type="first_name"
+                  placeholder="John"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Last Name</Label>
+                <Input
+                  id="last_name"
+                  type="last_name"
+                  placeholder="Doe"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -75,6 +119,25 @@ export function SignUpForm({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Address</Label>
+                <AddressInput
+                  value={address}
+                  onChange={setAddress}
+                  onValidAddressChange={setSelectedAddress}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Phone</Label>
+                <Input
+                  id="phone"
+                  type="phone"
+                  placeholder="+372 555 555 55"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
