@@ -56,7 +56,7 @@ export function ChatConversation({ chat }: { chat: Chat }) {
                 </CardHeader>
 
                 <CardContent className="flex flex-col gap-6 flex-1">
-                    <div className="flex flex-col gap-4 flex-1">
+                    <div className="flex flex-col gap-4 flex-1 max-h-96 overflow-auto chat-scroll">
                         {messages.map((msg) => (
                             <div key={msg.id} className="flex flex-col gap-1">
                                 <div

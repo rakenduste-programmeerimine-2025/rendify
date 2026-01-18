@@ -13,6 +13,7 @@ import { AppSelect } from "@/components/ui/select";
 import { User } from "@supabase/supabase-js";
 import { getUser } from "@/app/account/server";
 import { AddressInput } from "@/components/address-input";
+import { ImageUploader } from "@/components/image-uploader"; // ← новый импорт
 
 type Suggestion = {
     id: string | number;
@@ -28,6 +29,7 @@ export default function CreateItem() {
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState<string>("");
     const [price, setPrice] = useState(0);
+    const [images, setImages] = useState<ImageFile[]>([]);
 
     // адрес
     const [address, setAddress] = useState("");
@@ -94,6 +96,11 @@ export default function CreateItem() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className={"flex flex-col gap-3 pt-6"}>
+                    <ImageUploader
+                        onImagesChange={setImages}
+                        maxImages={10}
+                    />
+
                     <label>Title*</label>
                     <Input
                         required
@@ -158,7 +165,7 @@ export default function CreateItem() {
                         type="number"
                         placeholder={"15.00"}
                         value={price}
-                        onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => setPrice(parseFloat(e.target.value))}
                     />
                     <div className={"flex gap-3"}>
                         <Button variant={"ghost"} className={"border"}>Cancel</Button>
