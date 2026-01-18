@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { useEffect, useState } from "react";
-import {format, differenceInCalendarDays, addDays, isSameDay, set, setDate, startOfDay, isBefore} from "date-fns";
+import { format, differenceInCalendarDays, addDays, isSameDay, set, setDate, startOfDay, isBefore } from "date-fns";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/database.types";
-import {TOOL_CATEGORIES} from "@/app/tool-categories";
+import { TOOL_CATEGORIES } from "@/app/tool-categories";
 
 type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
     rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
@@ -131,6 +131,15 @@ export default function ItemPage() {
                     <CardContent className={"flex flex-col gap-3 pt-6"}>
                         <label>{item?.title}</label>
                         <div className={"p-1 rounded-lg text-xs bg-primary w-fit"}>{TOOL_CATEGORIES.find((c) => c.value === item?.category)?.label ?? ""}</div>
+                        <div>
+                            {item && item.image_urls?.map((url: string) => (
+                                <img
+                                    key={url}
+                                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/OfferImages/${url}`}
+                                    alt={url}
+                                />
+                            ))}
+                        </div>
                         <label className={"text-xl"}>Description:</label>
                         <label className={"text-muted-foreground"}>{item?.description}</label>
                         <label className={"text-xl"}>Price:</label>

@@ -13,7 +13,7 @@ import { AppSelect } from "@/components/ui/select";
 import { User } from "@supabase/supabase-js";
 import { getUser } from "@/app/account/server";
 import { AddressInput } from "@/components/address-input";
-import { ImageUploader } from "@/components/image-uploader"; // ← новый импорт
+import { ImageUploader, ImageFile } from "@/components/image-uploader"; // ← новый импорт
 
 type Suggestion = {
     id: string | number;
@@ -54,6 +54,39 @@ export default function CreateItem() {
     async function createItem() {
         const supabase = await createClient();
 
+        const uploadedPaths: string[] = [];
+        let imageErrors = [];
+        let previewImage;
+
+        for (const image of images) {
+            const fileName = `${Date.now()}-${image.file.name}`;
+            const { error } = await supabase.storage
+                .from("OfferImages")
+                .upload(fileName, image.file);
+
+            if (error) {
+                console.error("Upload error for", image.file.name, error);
+                continue; // Skip failed uploads or handle error
+            }
+
+            if (image.isPreview) {
+                previewImage = fileName;
+            }
+
+            imageErrors.push(error);
+            uploadedPaths.push(fileName);
+        }
+
+        if (imageErrors.length == 0) {
+            console.error("Upload errors:", imageErrors);
+            return;
+        }
+
+        if (previewImage != undefined) {
+            uploadedPaths.splice(uploadedPaths.indexOf(previewImage), 1);
+            uploadedPaths.unshift(previewImage);
+        }
+
         const finalAddress = useAccountAddress
             ? (user as any)?.user_metadata?.address ?? ""
             : address;
@@ -66,6 +99,7 @@ export default function CreateItem() {
                 category,
                 price_cents: price * 100,
                 location: finalAddress,
+                image_urls: uploadedPaths,
             })
             .select("id");
 
