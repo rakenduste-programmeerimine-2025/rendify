@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePlus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-type ImageFile = {
+export type ImageFile = {
     file: File;
     previewUrl: string;
     isPreview: boolean;
@@ -101,11 +101,10 @@ export function ImageUploader({ onImagesChange, maxImages = 10 }: ImageUploaderP
             {/* Drag & Drop input */}
             {!isFull && (
                 <div
-                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
-                        dragging
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${dragging
                             ? "border-accent bg-accent/10"
                             : "border-muted-foreground/30 hover:border-accent"
-                    }`}
+                        }`}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
                     onDragOver={handleDrag}
@@ -153,11 +152,10 @@ export function ImageUploader({ onImagesChange, maxImages = 10 }: ImageUploaderP
                     {images.map((image, index) => (
                         <div
                             key={index}
-                            className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:shadow-md ${
-                                image.isPreview
+                            className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:shadow-md ${image.isPreview
                                     ? "border-accent ring-2 ring-accent ring-offset-2"
                                     : "border-muted-foreground/50 hover:border-accent"
-                            }`}
+                                }`}
                             onClick={() => setPreviewImage(index)}
                         >
                             <img
@@ -183,7 +181,7 @@ export function ImageUploader({ onImagesChange, maxImages = 10 }: ImageUploaderP
                                         removeImage(index);
                                     }}
                                 >
-                                    <Trash2 className="h-3.5 w-3.5"/>
+                                    <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
                             </div>
                         </div>

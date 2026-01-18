@@ -86,6 +86,15 @@ export default function Home() {
                             <CardDescription className="line-clamp-2">
                                 {product.description}
                             </CardDescription>
+                            <div>
+                                {product && product.image_urls && product.image_urls.length > 0 &&
+                                    <img
+                                        key={product.image_urls[0]}
+                                        src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/OfferImages/${product.image_urls[0]}`}
+                                        alt={product.image_urls[0]}
+                                    />
+                                }
+                            </div>
                             {product.location &&
                                 <CardDescription className={"flex gap-2 items-center"}>
                                     <MapPin size="26" strokeWidth={2} />{product.location}
