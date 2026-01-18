@@ -11,6 +11,16 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Delete, Eye, Pencil, Trash } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
+import { useDeleteItem } from "@/hooks/useDeleteItem";
+import {ImageUploader} from "@/components/image-uploader";
+import {Input} from "@/components/ui/input";
+import {AppSelect} from "@/components/ui/select";
+import {TOOL_CATEGORIES} from "@/app/tool-categories";
+import {Textarea} from "@/components/ui/textarea";
+import {AddressInput} from "@/components/address-input";
+import {useEditItem} from "@/hooks/useEditItem";
+
 
 type Rented = Database["public"]["Tables"]["rent_dates"]["Row"] & {
     rent_offer: {
@@ -33,6 +43,81 @@ export default function Page() {
     const [items, setItems] = useState<Database["public"]["Tables"]["rent_offers"]["Row"][]>([]);
     const [rentedOut, setRentedOut] = useState<RentedOut[]>([]);
     const [rented, setRented] = useState<Rented[]>([]);
+
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
+
+    const { deleteItem: performDelete, loading } = useDeleteItem();
+
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
+    const [editForm, setEditForm] = useState({
+        title: "",
+        description: "",
+        category: "",
+        price: 0,
+        address: "",
+        useAccountAddress: true,
+        images: []
+    });
+    const { editItem: performEdit, loading: editLoading } = useEditItem();
+
+    const handleEditClick = (item) => {
+        setEditingItem(item);
+        setEditForm({
+            title: item.title || "",
+            description: item.description || "",
+            category: item.category || "",
+            price: (item.price_cents || 0) / 100,
+            address: item.location || "",
+            useAccountAddress: true,
+            images: [] // New images or load old ones
+        });
+        setEditModalOpen(true);
+    };
+
+    const updateEditForm = (field, value) => {
+        setEditForm(prev => {
+            if (prev[field] === value) return prev;
+            return { ...prev, [field]: value };
+        });
+    };
+
+    const confirmEdit = async () => {
+        if (editingItem) {
+            const updates = {
+                title: editForm.title,
+                description: editForm.description,
+                category: editForm.category,
+                price_cents: Math.round(editForm.price * 100),
+                location: editForm.useAccountAddress ? "account_address" : editForm.address
+            };
+
+            await performEdit(editingItem.id, updates);
+            setEditModalOpen(false);
+            setEditingItem(null);
+        }
+    };
+
+    const isEditFormValid =
+        editForm.title.trim() &&
+        editForm.category &&
+        editForm.description.trim() &&
+        editForm.price > 0;
+
+    const handleDeleteClick = (itemId) => {
+        setItemToDelete(itemId);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (itemToDelete) {
+            await performDelete(itemToDelete);
+            setDeleteModalOpen(false);
+            setItemToDelete(null);
+            setItems(items.filter(item => item.id !== itemToDelete));
+        }
+    };
 
     useEffect(() => {
         (async () => {
@@ -93,21 +178,6 @@ export default function Page() {
         { id: "rented", label: "Rented" },
         { id: "rentedOut", label: "Rented out" }
     ]
-
-    async function deleteItem(id: number) {
-        const supabase = await createClient();
-
-        const { data, error } = await supabase
-            .from("rent_offers")
-            .delete()
-            .eq("id", id)
-
-        if (error) {
-            console.error("Error creating rent offer:", error);
-            return
-        }
-        setItems(items.filter(item => item.id !== id));
-    }
 
     return (
         <div className="flex flex-col min-h-svh w-full p-6 md:p-10 gap-6 max-w-6xl">
@@ -206,8 +276,14 @@ export default function Page() {
                                                 <Eye size={16} strokeWidth={2} />
                                             </Button>
                                         </Link>
-                                        <Button variant={"outline"} className={"p-2"}><Pencil size={16} strokeWidth={2} /></Button>
-                                        <Button variant={"outline"} className={"p-2 hover:bg-red-500 hover:text-black"} onClick={() => deleteItem(item.id)}><Trash size={16} strokeWidth={2} /></Button>
+                                        <Button variant={"outline"} className={"p-2"} onClick={() => handleEditClick(item)}><Pencil size={16} strokeWidth={2} /></Button>
+                                        <Button
+                                            variant="destructive"
+                                            className="p-2 group"
+                                            onClick={() => handleDeleteClick(item.id)}
+                                        >
+                                            <Trash size={16} strokeWidth={2} />
+                                        </Button>
                                     </div>
                                 </CardHeader>
                             </Card>
@@ -270,6 +346,142 @@ export default function Page() {
                         ))
                     }
                 </div>
+
+                {/* Modal for submit deleting my item */}
+                <Modal
+                    open={deleteModalOpen}
+                    onOpenChange={setDeleteModalOpen}
+                    title="Delete Item?"
+                    description="This action cannot be undone. All data and images will be permanently deleted."
+                    className="max-w-sm"
+                >
+                    <div className="space-y-4 pt-4">
+                        {itemToDelete && (
+                            <div className="p-4 bg-muted rounded-lg text-center">
+                                <div className="text-sm font-medium mb-1">"{items.find(i => i.id === itemToDelete)?.title}"</div>
+                                <div className="text-xs text-muted-foreground">will be deleted forever</div>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDeleteModalOpen(false)}
+                                className="flex-1"
+                                disabled={loading}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={confirmDelete}
+                                loading={loading}
+                                className="flex-1"
+                                disabled={loading}
+                            >
+                                {loading ? "Deleting..." : "Delete Item"}
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
+
+                <Modal
+                    open={editModalOpen}
+                    onOpenChange={setEditModalOpen}
+                    title="Edit Item"
+                    description="Update your item details"
+                    className="max-w-lg"
+                >
+                    <CardContent className="flex flex-col gap-3 pt-0">
+                        {/* ImageUploader */}
+                        <ImageUploader
+                            onImagesChange={(images) => updateEditForm("images", images)}
+                            maxImages={10}
+                        />
+
+                        {/* Title */}
+                        <label>Title*</label>
+                        <Input
+                            required
+                            placeholder="e.g. Bosh Power Drill"
+                            value={editForm.title}
+                            onChange={(e) => updateEditForm("title", e.target.value)}
+                        />
+
+                        {/* Category */}
+                        <label>Category*</label>
+                        <AppSelect
+                            value={editForm.category}
+                            onChange={(value) => updateEditForm("category", value)}
+                            placeholder="Select category"
+                            options={TOOL_CATEGORIES}
+                        />
+
+                        {/* Description */}
+                        <label>Description*</label>
+                        <Textarea
+                            required
+                            placeholder="Describe your item in details"
+                            value={editForm.description}
+                            onChange={(e) => updateEditForm("description", e.target.value)}
+                        />
+
+                        {/* Address */}
+                        <div className="mt-2 flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    id="use-account-address"
+                                    type="checkbox"
+                                    className="h-4 w-4 accent-accent"
+                                    checked={editForm.useAccountAddress}
+                                    onChange={(e) => updateEditForm("useAccountAddress", e.target.checked)}
+                                />
+                                <label htmlFor="use-account-address" className="text-sm">
+                                    Use my account address
+                                </label>
+                            </div>
+
+                            {!editForm.useAccountAddress && (
+                                <div className="flex flex-col gap-1">
+                                    <label>Pickup address*</label>
+                                    <AddressInput
+                                        value={editForm.address}
+                                        onChange={(value) => updateEditForm("address", value)}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Price */}
+                        <label>Price per day (€)*</label>
+                        <Input
+                            required
+                            type="number"
+                            placeholder="15.00"
+                            value={editForm.price}
+                            onChange={(e) => updateEditForm("price", parseFloat(e.target.value) || 0)}
+                        />
+
+                        {/* Buttons */}
+                        <div className="flex gap-3 pt-4">
+                            <Button
+                                variant="ghost"
+                                onClick={() => setEditModalOpen(false)}
+                                className="flex-1"
+                                disabled={editLoading}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={confirmEdit}
+                                disabled={!isEditFormValid || editLoading}
+                                className="flex-1"
+                            >
+                                {editLoading ? "Saving..." : "Update Item"}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Modal>
             </div>
         </div>
     );

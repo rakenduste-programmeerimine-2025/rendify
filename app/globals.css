@@ -15,6 +15,8 @@
     --border: 211 29% 83%;
     --input-background: 212 25% 10%;
     --radius: 0.5rem;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
   }
   .dark {
     --background: 214 33% 4%;
@@ -28,6 +30,8 @@
     --border: 211 34% 18%;
     --input-background: 212 25% 10%;
     --radius: 0.5rem;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
   }
 }
 
