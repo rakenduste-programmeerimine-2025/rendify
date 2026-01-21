@@ -75,7 +75,7 @@ export default function ItemPage() {
     }, []);
 
     const handleChatClick = () => {
-        router.push(`/chats?with=${item?.owner_id}&name=${encodeURIComponent(item?.owner_name || 'Owner')}`);
+        router.push(`/chat?with=${item?.owner_id}&name=${encodeURIComponent(item?.owner_name || 'Owner')}`);
     };
 
     const [range, setRange] = useState<DateRange | undefined>();
