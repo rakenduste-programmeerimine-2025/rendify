@@ -5,22 +5,41 @@ import { ImagePlus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 export type ImageFile = {
-    file: File;
+    file?: File;
     previewUrl: string;
     isPreview: boolean;
+    isExisting?: boolean;
 };
 
 interface ImageUploaderProps {
     onImagesChange: (images: ImageFile[]) => void;
     maxImages?: number;
+    initialImages?: string[];
+    previewImageUrl?: string;
 }
 
-export function ImageUploader({ onImagesChange, maxImages = 10 }: ImageUploaderProps) {
+export function ImageUploader({
+                                  onImagesChange,
+                                  maxImages = 10,
+                                  initialImages = [],
+                                  previewImageUrl = null
+                              }: ImageUploaderProps) {
     const [images, setImages] = useState<ImageFile[]>([]);
     const [dragging, setDragging] = useState(false);
     const isFull = images.length >= maxImages;
 
-    // Синхронизация с родителем
+    // Loading existing images
+    useEffect(() => {
+        if (initialImages.length > 0 && images.length === 0) {
+            const existingImages: ImageFile[] = initialImages.map((url, idx) => ({
+                previewUrl: url,
+                isPreview: previewImageUrl ? url === previewImageUrl : idx === 0,
+                isExisting: true,
+            }));
+            setImages(existingImages);
+        }
+    }, [initialImages, previewImageUrl]);
+
     useEffect(() => {
         onImagesChange(images);
     }, [images, onImagesChange]);
@@ -31,6 +50,7 @@ export function ImageUploader({ onImagesChange, maxImages = 10 }: ImageUploaderP
             file,
             previewUrl: URL.createObjectURL(file),
             isPreview: false,
+            isExisting: false,
         }));
 
         setImages((prev) => {
@@ -51,7 +71,7 @@ export function ImageUploader({ onImagesChange, maxImages = 10 }: ImageUploaderP
     };
 
     const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>, isDrag: boolean) => {
-        if (isFull) return; // Не принимать drag если полный
+        if (isFull) return;
         e.preventDefault();
         e.stopPropagation();
         setDragging(isDrag);
@@ -88,7 +108,12 @@ export function ImageUploader({ onImagesChange, maxImages = 10 }: ImageUploaderP
 
     useEffect(() => {
         return () => {
-            images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+            images.forEach((img) => {
+                // Clear for only new images
+                if (!img.isExisting && img.previewUrl.startsWith("blob:")) {
+                    URL.revokeObjectURL(img.previewUrl);
+                }
+            });
         };
     }, []);
 
@@ -102,9 +127,9 @@ export function ImageUploader({ onImagesChange, maxImages = 10 }: ImageUploaderP
             {!isFull && (
                 <div
                     className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${dragging
-                            ? "border-accent bg-accent/10"
-                            : "border-muted-foreground/30 hover:border-accent"
-                        }`}
+                        ? "border-accent bg-accent/10"
+                        : "border-muted-foreground/30 hover:border-accent"
+                    }`}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
                     onDragOver={handleDrag}
@@ -153,25 +178,29 @@ export function ImageUploader({ onImagesChange, maxImages = 10 }: ImageUploaderP
                         <div
                             key={index}
                             className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:shadow-md ${image.isPreview
-                                    ? "border-accent ring-2 ring-accent ring-offset-2"
-                                    : "border-muted-foreground/50 hover:border-accent"
-                                }`}
+                                ? "border-accent ring-2 ring-accent ring-offset-2"
+                                : "border-muted-foreground/50 hover:border-accent"
+                            }`}
                             onClick={() => setPreviewImage(index)}
                         >
                             <img
-                                src={image.previewUrl}
+                                src={image.isExisting ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/OfferImages/${image.previewUrl}` : image.previewUrl}
                                 alt={`Image ${index + 1}`}
                                 className="w-full h-24 object-cover"
                             />
                             {image.isPreview && (
-                                <div
-                                    className="absolute top-1 left-1 bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded shadow-sm">
+                                <div className="absolute top-1 left-1 bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded shadow-sm">
                                     Preview
                                 </div>
                             )}
+                            {/* Togle for existing iamge */}
+                            {image.isExisting && (
+                                <div className="absolute bottom-1 right-1 bg-green-500 text-white text-[10px] px-1 py-0.5 rounded shadow-sm">
+                                    Existing
+                                </div>
+                            )}
                             {/* delete button visible on hover */}
-                            <div
-                                className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                            <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
                                 <Button
                                     variant="destructive"
                                     size="sm"

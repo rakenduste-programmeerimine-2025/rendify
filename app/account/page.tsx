@@ -58,7 +58,7 @@ export default function Page() {
         price: 0,
         address: "",
         useAccountAddress: true,
-        images: []
+        image_urls: []
     });
     const { editItem: performEdit, loading: editLoading } = useEditItem();
 
@@ -71,9 +71,10 @@ export default function Page() {
             price: (item.price_cents || 0) / 100,
             address: item.location || "",
             useAccountAddress: true,
-            images: [] // New images or load old ones
+            image_urls: item.image_urls
         });
         setEditModalOpen(true);
+
     };
 
     const updateEditForm = (field, value) => {
@@ -257,7 +258,17 @@ export default function Page() {
                         activeCard === "myItems" &&
                         items.map((item) => (
                             <Card key={item.id} className={"h-fit flex flex-col"}>
-                                <CardHeader className={"flex gap-6 flex-row"}>
+                                <CardHeader className={"flex gap-4 flex-row"}>
+                                    {item.image_urls && item.image_urls.length > 0 && (
+                                        <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden shadow-md">
+                                            <img
+                                                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/OfferImages/${item.image_urls[0]}`}
+                                                alt={item.title}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+
                                     <div className={"w-full flex flex-col"}>
                                         <CardTitle className="text-base">{item.title}</CardTitle>
                                         <CardDescription>
@@ -289,11 +300,22 @@ export default function Page() {
                             </Card>
                         ))
                     }
+
                     {
                         activeCard === "rented" &&
                         rented.map((rented) => (
                             <Card key={rented.id} className={"h-fit flex flex-col"}>
-                                <CardHeader className={"flex gap-6 flex-row"}>
+                                <CardHeader className={"flex gap-4 flex-row"}>
+                                    {rented.rent_offer.image_urls && rented.rent_offer.image_urls.length > 0 && (
+                                        <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden shadow-md">
+                                            <img
+                                                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/OfferImages/${rented.rent_offer.image_urls[0]}`}
+                                                alt={rented.rent_offer.title}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+
                                     <div className={"w-full flex flex-col"}>
                                         <CardTitle className="text-base">{rented.rent_offer.title}</CardTitle>
                                         <CardDescription>
@@ -317,11 +339,22 @@ export default function Page() {
                             </Card>
                         ))
                     }
+
                     {
                         activeCard === "rentedOut" &&
                         rentedOut.map((rented) => (
                             <Card key={rented.id} className={"h-fit flex flex-col"}>
-                                <CardHeader className={"flex gap-6 flex-row"}>
+                                <CardHeader className={"flex gap-4 flex-row"}>
+                                    {rented.rent_offer.image_urls && rented.rent_offer.image_urls.length > 0 && (
+                                        <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden shadow-md">
+                                            <img
+                                                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/OfferImages/${rented.rent_offer.image_urls[0]}`}
+                                                alt={rented.rent_offer.title}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+
                                     <div className={"w-full flex flex-col"}>
                                         <CardTitle className="text-base">{rented.rent_offer.title}</CardTitle>
                                         <CardDescription>
@@ -345,6 +378,7 @@ export default function Page() {
                             </Card>
                         ))
                     }
+
                 </div>
 
                 {/* Modal for submit deleting my item */}
@@ -393,10 +427,12 @@ export default function Page() {
                     className="max-w-lg"
                 >
                     <CardContent className="flex flex-col gap-3 pt-0">
-                        {/* ImageUploader */}
+                        {/* ImageUploader with existing images */}
                         <ImageUploader
                             onImagesChange={(images) => updateEditForm("images", images)}
                             maxImages={10}
+                            initialImages={editForm?.image_urls || []}
+                            previewImageUrl={editForm?.image_urls?.[0]}
                         />
 
                         {/* Title */}

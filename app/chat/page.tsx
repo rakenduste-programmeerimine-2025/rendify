@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format, isToday, set } from "date-fns";
 import { ChatConversation } from "@/components/chat-conversation";
 import { createClient } from "@/lib/supabase/client";
@@ -37,6 +37,7 @@ export default function Page() {
     const [chats, setChats] = useState<Chat[]>([]);
     const [user, setUser] = useState<User | null>(null);
     const activeChat = chats.find(c => c.id === activeChatId)!;
+    const searchParams = useSearchParams();
 
     useEffect(() => {
         (async () => {
@@ -113,6 +114,39 @@ export default function Page() {
         })();
     }, []);
 
+    useEffect(() => {
+        if (chats.length === 0 || !user) return;
+
+        const withUserId = searchParams?.get('with');
+        const ownerName = searchParams?.get('name') || 'Item Owner';
+
+        if (!withUserId) return;
+
+        const existingChat = chats.find(chat =>
+            chat.from_id === withUserId || chat.to_id === withUserId
+        );
+
+
+        if (existingChat) {
+            setActiveChatId(existingChat.id);
+            return;
+        }
+
+        const fakeChat: Chat = {
+            id: `fake-${Date.now()}`,
+            created_at: new Date().toISOString(),
+            from_id: user.id,
+            from_name: (user.user_metadata as any)?.full_name || 'You',
+            to_id: withUserId,
+            to_name: decodeURIComponent(ownerName),
+            updated_at: new Date().toISOString(),
+            messages: []
+        };
+
+        setChats(prev => [fakeChat, ...prev]);
+        setActiveChatId(fakeChat.id);
+    }, [chats.length, user]);
+
     function formatChatDate(dateString: string) {
         const d = new Date(dateString);
         if (isToday(d)) {
@@ -160,9 +194,9 @@ export default function Page() {
                                         </Label>
                                     )}
 
-                                    <Label className="text-base text-muted-foreground">
-                                        {"chat.product"}
-                                    </Label>
+                                    {/*<Label className="text-base text-muted-foreground">*/}
+                                    {/*    {"chat.product"}*/}
+                                    {/*</Label>*/}
                                 </div>
                             );
                         })}
