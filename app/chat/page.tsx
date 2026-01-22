@@ -11,6 +11,7 @@ import { ChatConversation } from "@/components/chat-conversation";
 import { createClient } from "@/lib/supabase/client";
 import { getUser } from "../account/server";
 import { User } from "@supabase/supabase-js";
+import { connection } from "next/server";
 
 export type ChatMessage = {
     id: number;
@@ -22,7 +23,8 @@ export type ChatMessage = {
     message: string;
 };
 
-export default function Page() {
+export default async function Page() {
+    await connection()
     const router = useRouter();
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
     const [messages, setMessages] = useState<
