@@ -94,6 +94,18 @@ export default function Page() {
                 location: editForm.useAccountAddress ? "account_address" : editForm.address
             };
 
+            const supabase = await createClient();
+            const updateResult = await supabase
+                .from("rent_offers")
+                .update(updates)
+                .eq("id", editingItem.id)
+                .select();
+
+            if (updateResult.error) {
+                console.log("Error updating rent offer:", updateResult.error);
+                return
+            }
+
             await performEdit(editingItem.id, updates);
             setEditModalOpen(false);
             setEditingItem(null);
@@ -113,6 +125,17 @@ export default function Page() {
 
     const confirmDelete = async () => {
         if (itemToDelete) {
+            const supabase = await createClient();
+            const { data, error } = await supabase
+                .from("rent_offers")
+                .delete()
+                .eq("id", itemToDelete);
+
+            if (error) {
+                console.log("Error deleting rent offer:", error);
+                return
+            }
+
             await performDelete(itemToDelete);
             setDeleteModalOpen(false);
             setItemToDelete(null);
