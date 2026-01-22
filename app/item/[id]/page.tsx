@@ -1,39 +1,53 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { notFound, useParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
-import { DateRangePicker } from "@/components/date-range-picker";
 import { useEffect, useState } from "react";
 import { format, differenceInCalendarDays, addDays, isSameDay, set, setDate, startOfDay, isBefore } from "date-fns";
-import {ArrowLeft, MapPin, Calendar, CalendarDays} from "lucide-react";
+import {ArrowLeft, MapPin, Calendar, CalendarDays, MessageCircle} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getUser } from "@/app/account/server";
 import { Database } from "@/lib/supabase/database.types";
 import { TOOL_CATEGORIES } from "@/app/tool-categories";
 import { Modal } from "@/components/ui/modal";
 import { useRentItem } from "@/hooks/useRentItem";
+import {cn} from "@/lib/utils";
+import { User } from "@supabase/supabase-js";
 
 type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
     rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
 }
 
+const DateRangePicker = dynamic(
+    () => import("@/components/date-range-picker").then(mod => mod.DateRangePicker),
+    { ssr: false }
+);
+
 export default function ItemPage() {
     const router = useRouter();
     const { id } = useParams();
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+
     if (!id) notFound();
     if (typeof id !== "string") notFound();
     if (id == "") notFound();
 
     const [item, setItem] = useState<Item | null>(null);
+    const [imageIndex, setImageIndex] = useState(0);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [isOwner, setIsOwner] = useState(false);
 
     const { rentItem, loading: rentLoading } = useRentItem(item?.price_cents / 100 || 0);
 
     useEffect(() => {
         (async () => {
             const supabase = await createClient();
+            const user = await getUser();
+            setCurrentUser(user);
 
             const itemResult = await supabase
                 .from("rent_offers_with_owner")
@@ -49,12 +63,20 @@ export default function ItemPage() {
             if (itemResult.error) {
                 console.log("Error fetching item:", itemResult.error);
                 notFound();
-            };
+            }
 
             setItem(itemResult.data);
-            console.log("item", itemResult.data);
+
+            // Check if user is owner
+            if (user && itemResult.data.owner_id === user.id) {
+                setIsOwner(true);
+            }
         })();
     }, []);
+
+    const handleChatClick = () => {
+        router.push(`/chat?with=${item?.owner_id}&name=${encodeURIComponent(item?.owner_name || 'Owner')}`);
+    };
 
     const [range, setRange] = useState<DateRange | undefined>();
 
@@ -86,7 +108,7 @@ export default function ItemPage() {
         if (!range?.from || !range?.to) return 0;
 
         const totalDays =
-            differenceInCalendarDays(range.to, range.from) + 1; // включительно[web:53]
+            differenceInCalendarDays(range.to, range.from) + 1;
 
         let activeDays = 0;
 
@@ -104,14 +126,12 @@ export default function ItemPage() {
     async function book() {
         if (nights === 0 || !range?.from || !range?.to) return;
 
-        // Show modal
         setShowConfirmModal(true);
     }
 
     const confirmBook = async () => {
         if (!range?.from || !range?.to || !item) return;
 
-        // call hook
         const result = await rentItem(item.id, {
             startDate: range.from.toISOString(),
             endDate: range.to.toISOString()
@@ -120,7 +140,7 @@ export default function ItemPage() {
         if (result.success) {
             setShowConfirmModal(false);
             setRange(undefined);
-            router.refresh(); // update renge dates
+            router.refresh();
         }
     };
 
@@ -132,20 +152,64 @@ export default function ItemPage() {
             <Button variant="ghost" onClick={() => router.back()}>
                 <ArrowLeft size="16" strokeWidth={2} />Back to search
             </Button>
+
             <div className="flex gap-6 w-full">
                 <Card className={"w-full h-fit"}>
                     <CardContent className={"flex flex-col gap-3 pt-6"}>
                         <label>{item?.title}</label>
                         <div className={"p-1 rounded-lg text-xs bg-primary w-fit"}>{TOOL_CATEGORIES.find((c) => c.value === item?.category)?.label ?? ""}</div>
                         <div>
-                            {item && item.image_urls?.map((url: string) => (
-                                <img
-                                    key={url}
-                                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/OfferImages/${url}`}
-                                    alt={url}
-                                />
-                            ))}
+                            {item?.image_urls?.length > 0 ? (
+                                <div className="relative w-full max-w-2xl mx-auto">
+                                    <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] lg:h-80 rounded-2xl overflow-hidden shadow-2xl group">
+                                        <img
+                                            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/OfferImages/${item.image_urls[imageIndex]}`}
+                                            alt={item.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500 brightness-100 group-hover:brightness-105"
+                                        />
+                                    </div>
+
+                                    {item.image_urls.length > 1 && (
+                                        <div className="flex gap-2 sm:gap-3 mt-4 p-2 -mx-2 sm:-mx-4 overflow-x-auto pb-3 scrollbar-thin bg-muted/30 rounded-xl border backdrop-blur-sm">
+                                            {item.image_urls.map((url, index) => (
+                                                <button
+                                                    key={url}
+                                                    onClick={() => setImageIndex(index)}
+                                                    className={cn(
+                                                        "relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-xl overflow-hidden shadow-md hover:shadow-xl cursor-pointer transition-all duration-300",
+                                                        index === imageIndex
+                                                            ? "ring-2 ring-accent/80 shadow-accent/30 border-2 border-accent scale-[1.06] bg-accent/10"
+                                                            : "hover:scale-105 hover:shadow-lg hover:border-accent/40 border border-transparent",
+                                                        "hover:-translate-y-1 active:scale-[0.98]"
+                                                    )}
+                                                >
+                                                    <img
+                                                        src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/OfferImages/${url}`}
+                                                        alt={`Photo ${index + 1}`}
+                                                        className="w-full h-full object-cover brightness-110 hover:brightness-120 transition-all"
+                                                    />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {item.image_urls.length > 1 && (
+                                        <div className="text-center mt-3 p-2 bg-muted/50 rounded-lg backdrop-blur-sm">
+                                            <span className="text-sm font-semibold text-foreground">
+                                                {imageIndex + 1} / {item.image_urls.length}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="w-full aspect-[4/3] sm:aspect-[16/9] bg-gradient-to-br from-muted to-muted-foreground/10 rounded-2xl flex items-center justify-center shadow-xl">
+                                    <div className="text-muted-foreground text-lg font-medium px-4 text-center">
+                                        No images available
+                                    </div>
+                                </div>
+                            )}
                         </div>
+
                         <label className={"text-xl"}>Description:</label>
                         <label className={"text-muted-foreground"}>{item?.description}</label>
                         <label className={"text-xl"}>Price:</label>
@@ -157,127 +221,142 @@ export default function ItemPage() {
                         </div>
                         <label className={"text-xl"}>Owner:</label>
                         <label>{item?.owner_name}</label>
+
+                        {/* Hide chat button if user is owner */}
+                        {!isOwner && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleChatClick}
+                                className="flex items-center gap-2 mt-4 w-full sm:w-auto"
+                            >
+                                <MessageCircle size={18} />
+                                Chat with owner
+                            </Button>
+                        )}
                     </CardContent>
                 </Card>
 
-                <Card className={"max-w-min"}>
-                    <CardHeader>
-                        <CardTitle className="text-2xl">Renting info</CardTitle>
-                    </CardHeader>
-                    <CardContent className={"flex flex-col gap-3"}>
-                        <CardDescription>
-                            Select dates
-                        </CardDescription>
-                        <DateRangePicker
-                            value={range}
-                            onChange={setRange}
-                            disabledDates={disabledDates}
-                        />
-                        {futureRanges.length > 0 && (
-                            <div>
-                                <CardDescription>Reserved dates:</CardDescription>
-                                <div className="flex gap-3 flex-wrap">
-                                    {futureRanges.map((date, index) => (
-                                        <div
-                                            key={index}
-                                            className="border border-b p-1 rounded-lg text-xs"
-                                        >
-                                            {format(new Date(date.from), "dd.MM.yyyy")} -{" "}
-                                            {format(new Date(date.to), "dd.MM.yyyy")}
-                                        </div>
-                                    ))}
+                {/* show selector if user isnt owner */}
+                {!isOwner && (
+                    <Card className={"max-w-min"}>
+                        <CardHeader>
+                            <CardTitle className="text-2xl">Renting info</CardTitle>
+                        </CardHeader>
+                        <CardContent className={"flex flex-col gap-3"}>
+                            <CardDescription>
+                                Select dates
+                            </CardDescription>
+                            <DateRangePicker
+                                value={range}
+                                onChange={setRange}
+                                disabledDates={disabledDates}
+                            />
+                            {futureRanges.length > 0 && (
+                                <div>
+                                    <CardDescription>Reserved dates:</CardDescription>
+                                    <div className="flex gap-3 flex-wrap">
+                                        {futureRanges.map((date, index) => (
+                                            <div
+                                                key={index}
+                                                className="border border-b p-1 rounded-lg text-xs"
+                                            >
+                                                {format(new Date(date.from), "dd.MM.yyyy")} -{" "}
+                                                {format(new Date(date.to), "dd.MM.yyyy")}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                        {nights > 0 &&
-                            <div className={"rounded-2xl bg-muted p-3 gap-1.5 flex flex-col"}>
-                                <div className={"flex justify-between"}>
-                                    <label className={"text-muted-foreground"}>
-                                        Dates:
-                                    </label>
-                                    {range?.from && range?.to && (
-                                        <p className="text-sm">
-                                            {format(range.from, "dd.MM.yyyy")} – {format(range.to, "dd.MM.yyyy")}
-                                        </p>
-                                    )}
+                            )}
+                            {nights > 0 &&
+                                <div className={"rounded-2xl bg-muted p-3 gap-1.5 flex flex-col"}>
+                                    <div className={"flex justify-between"}>
+                                        <label className={"text-muted-foreground"}>
+                                            Dates:
+                                        </label>
+                                        {range?.from && range?.to && (
+                                            <p className="text-sm">
+                                                {format(range.from, "dd.MM.yyyy")} – {format(range.to, "dd.MM.yyyy")}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className={"flex justify-between"}>
+                                        <label className={"text-muted-foreground"}>
+                                            Days:
+                                        </label>
+                                        <label className={"text-muted-foreground"}>
+                                            {nights}
+                                        </label>
+                                    </div>
+                                    <div className={"h-px w-full bg-border"} />
+                                    <div className={"flex justify-between"}>
+                                        <label>Total:</label>
+                                        <label className={"text-primary"}>{totalPrice}€</label>
+                                    </div>
                                 </div>
-                                <div className={"flex justify-between"}>
-                                    <label className={"text-muted-foreground"}>
-                                        Days:
-                                    </label>
-                                    <label className={"text-muted-foreground"}>
-                                        {nights}
-                                    </label>
-                                </div>
-                                <div className={"h-px w-full bg-border"} />
-                                <div className={"flex justify-between"}>
-                                    <label>Total:</label>
-                                    <label className={"text-primary"}>{totalPrice}€</label>
-                                </div>
-                            </div>
-                        }
-                        <Button disabled={nights == 0} onClick={() => book()}>
-                            <Calendar size="16" strokeWidth={2} />
-                            Book
-                        </Button>
-                    </CardContent>
-                </Card>
+                            }
+                            <Button disabled={nights == 0} onClick={() => book()}>
+                                <Calendar size="16" strokeWidth={2} />
+                                Book
+                            </Button>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
-             {/* New modal for submiting */}
-            <Modal
-                open={showConfirmModal}
-                onOpenChange={setShowConfirmModal}
-                title="Confirm Booking"
-                description="Review your rental details before confirming"
-                className="max-w-sm"
-            >
-                <div className="space-y-4 p-4">
-                    {/* Selected dates */}
-                    <div className="p-4 bg-muted rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                            <CalendarDays size={18} />
-                            <span className="font-medium">Rental Period:</span>
+            {/* Modal if user isnt owner */}
+            {!isOwner && (
+                <Modal
+                    open={showConfirmModal}
+                    onOpenChange={setShowConfirmModal}
+                    title="Confirm Booking"
+                    description="Review your rental details before confirming"
+                    className="max-w-sm"
+                >
+                    <div className="space-y-4 p-4">
+                        <div className="p-4 bg-muted rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                                <CalendarDays size={18} />
+                                <span className="font-medium">Rental Period:</span>
+                            </div>
+                            <div className="text-lg font-bold">
+                                {range?.from ? format(range.from, "dd.MM.yyyy") : "–"}
+                                <span className="mx-2">→</span>
+                                {range?.to ? format(range.to, "dd.MM.yyyy") : "–"}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                                {nights} {nights === 1 ? "day" : "days"}
+                            </div>
                         </div>
-                        <div className="text-lg font-bold">
-                            {range?.from ? format(range.from, "dd.MM.yyyy") : "–"}
-                            <span className="mx-2">→</span>
-                            {range?.to ? format(range.to, "dd.MM.yyyy") : "–"}
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                            {nights} {nights === 1 ? "day" : "days"}
-                        </div>
-                    </div>
 
-                    {/* Amount of rent */}
-                    <div className="p-4 bg-accent/10 border rounded-lg text-center">
-                        <div className="text-3xl font-bold text-accent-foreground">
-                            €{totalPrice.toFixed(2)}
+                        <div className="p-4 bg-accent/10 border rounded-lg text-center">
+                            <div className="text-3xl font-bold text-accent-foreground">
+                                €{totalPrice.toFixed(2)}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                                Total cost
+                            </div>
                         </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                            Total cost
-                        </div>
-                    </div>
 
-                    {/* Buttons */}
-                    <div className="flex gap-3 pt-4">
-                        <Button
-                            variant="outline"
-                            onClick={() => setShowConfirmModal(false)}
-                            className="flex-1"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={confirmBook}
-                            disabled={rentLoading}
-                            className="flex-1 gap-2"
-                        >
-                            {rentLoading ? "Booking..." : "Confirm & Book"}
-                        </Button>
+                        <div className="flex gap-3 pt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowConfirmModal(false)}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={confirmBook}
+                                disabled={rentLoading}
+                                className="flex-1 gap-2"
+                            >
+                                {rentLoading ? "Booking..." : "Confirm & Book"}
+                            </Button>
+                        </div>
                     </div>
-                </div>
-            </Modal>
+                </Modal>
+            )}
         </div>
     );
 }

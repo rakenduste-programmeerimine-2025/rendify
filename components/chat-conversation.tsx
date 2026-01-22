@@ -1,21 +1,32 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SendHorizonal } from "lucide-react";
 import { format, set } from "date-fns";
-import { type Chat } from "@/app/chat/page";
+import { type ChatMessage } from "@/app/chat/page";
 import { getUser } from "@/app/account/server";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
-export function ChatConversation({ chat }: { chat: Chat }) {
-    const messages = chat.messages;
+export function ChatConversation({ chatId, chatName, messages }: { chatId: string, chatName: string, messages: ChatMessage[] }) {
     const [text, setText] = useState("");
     const [user, setUser] = useState<User | null>(null);
+
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    // Scroll when opening chat
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     const handleSend = async () => {
         const supabase = await createClient();
@@ -23,7 +34,7 @@ export function ChatConversation({ chat }: { chat: Chat }) {
         const { data, error } = await supabase
             .from("messages")
             .insert({
-                chat_id: chat.id,
+                to_id: chatId,
                 message: text,
             })
             .select("*");
@@ -34,6 +45,8 @@ export function ChatConversation({ chat }: { chat: Chat }) {
         }
 
         setText("");
+        // Scroll after sending message
+        setTimeout(scrollToBottom, 100);
     };
 
     useEffect(() => {
@@ -48,19 +61,19 @@ export function ChatConversation({ chat }: { chat: Chat }) {
             <Card className="flex flex-col h-full">
                 <CardHeader>
                     <CardTitle className="text-base font-semibold">
-                        {chat.from_id == user?.id ? chat.to_name : chat.from_name}
+                        {chatName}
                     </CardTitle>
-                    <Label className="text-xs text-muted-foreground">
-                        {"chat.product"}
-                    </Label>
                 </CardHeader>
 
                 <CardContent className="flex flex-col gap-6 flex-1">
-                    <div className="flex flex-col gap-4 flex-1 max-h-96 overflow-auto chat-scroll">
+                    <div
+                        ref={messagesContainerRef}
+                        className="flex flex-col gap-4 flex-1 max-h-96 overflow-auto chat-scroll"
+                    >
                         {messages.map((msg) => (
                             <div key={msg.id} className="flex flex-col gap-1">
                                 <div
-                                    className={`max-w-[70%] rounded-full px-4 py-2 text-sm ${msg.sender_id == user?.id
+                                    className={`max-w-[70%] rounded-full px-4 py-2 text-sm ${msg.from_id == user?.id
                                         ? "ml-auto bg-primary text-primary-foreground"
                                         : "mr-auto bg-muted text-foreground"
                                         }`}
@@ -69,13 +82,16 @@ export function ChatConversation({ chat }: { chat: Chat }) {
                                 </div>
 
                                 <span
-                                    className={`mt-0.5 text-xs text-muted-foreground ${msg.sender_id == user?.id ? "ml-auto" : "mr-auto"
+                                    className={`mt-0.5 text-xs text-muted-foreground ${msg.from_id == user?.id ? "ml-auto" : "mr-auto"
                                         }`}
                                 >
                                     {format(new Date(msg.created_at), "MM/dd")}
                                 </span>
                             </div>
                         ))}
+
+                        {/* Invisible element for scroll */}
+                        <div ref={messagesEndRef} />
                     </div>
 
                     {/* input + send button */}
