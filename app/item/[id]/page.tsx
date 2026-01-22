@@ -7,11 +7,13 @@ import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { useEffect, useState } from "react";
 import { format, differenceInCalendarDays, addDays, isSameDay, set, setDate, startOfDay, isBefore } from "date-fns";
-import { ArrowLeft, MapPin, Calendar } from "lucide-react";
+import {ArrowLeft, MapPin, Calendar, CalendarDays} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/database.types";
 import { TOOL_CATEGORIES } from "@/app/tool-categories";
+import { Modal } from "@/components/ui/modal";
+import { useRentItem } from "@/hooks/useRentItem";
 
 type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
     rent_dates: Database["public"]["Tables"]["rent_dates"]["Row"][]
@@ -20,11 +22,14 @@ type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
 export default function ItemPage() {
     const router = useRouter();
     const { id } = useParams();
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     if (!id) notFound();
     if (typeof id !== "string") notFound();
     if (id == "") notFound();
 
     const [item, setItem] = useState<Item | null>(null);
+
+    const { rentItem, loading: rentLoading } = useRentItem(item?.price_cents / 100 || 0);
 
     useEffect(() => {
         (async () => {
@@ -97,26 +102,27 @@ export default function ItemPage() {
     }
 
     async function book() {
-        const supabase = await createClient();
+        if (nights === 0 || !range?.from || !range?.to) return;
 
-        const { data, error } = await supabase
-            .from("rent_dates")
-            .insert({
-                from: range?.from,
-                to: range?.to,
-                rent_offer: item!.id,
-                price_cents: item!.price_cents,
-            })
-            .select("id");
-
-        if (error) {
-            console.error("Error creating rent offer:", error);
-            return
-        }
-
-        setRange(undefined);
-        router.push(`/item/${item!.id}`);
+        // Show modal
+        setShowConfirmModal(true);
     }
+
+    const confirmBook = async () => {
+        if (!range?.from || !range?.to || !item) return;
+
+        // call hook
+        const result = await rentItem(item.id, {
+            startDate: range.from.toISOString(),
+            endDate: range.to.toISOString()
+        });
+
+        if (result.success) {
+            setShowConfirmModal(false);
+            setRange(undefined);
+            router.refresh(); // update renge dates
+        }
+    };
 
     const nights = countActiveDays(range, disabledDates);
     const totalPrice = nights * (item?.price_cents || 0) / 100;
@@ -217,6 +223,61 @@ export default function ItemPage() {
                     </CardContent>
                 </Card>
             </div>
+
+             {/* New modal for submiting */}
+            <Modal
+                open={showConfirmModal}
+                onOpenChange={setShowConfirmModal}
+                title="Confirm Booking"
+                description="Review your rental details before confirming"
+                className="max-w-sm"
+            >
+                <div className="space-y-4 p-4">
+                    {/* Selected dates */}
+                    <div className="p-4 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                            <CalendarDays size={18} />
+                            <span className="font-medium">Rental Period:</span>
+                        </div>
+                        <div className="text-lg font-bold">
+                            {range?.from ? format(range.from, "dd.MM.yyyy") : "–"}
+                            <span className="mx-2">→</span>
+                            {range?.to ? format(range.to, "dd.MM.yyyy") : "–"}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                            {nights} {nights === 1 ? "day" : "days"}
+                        </div>
+                    </div>
+
+                    {/* Amount of rent */}
+                    <div className="p-4 bg-accent/10 border rounded-lg text-center">
+                        <div className="text-3xl font-bold text-accent-foreground">
+                            €{totalPrice.toFixed(2)}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                            Total cost
+                        </div>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex gap-3 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowConfirmModal(false)}
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={confirmBook}
+                            disabled={rentLoading}
+                            className="flex-1 gap-2"
+                        >
+                            {rentLoading ? "Booking..." : "Confirm & Book"}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

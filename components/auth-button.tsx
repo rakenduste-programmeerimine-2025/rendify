@@ -29,7 +29,7 @@ export function AuthButton() {
 
     return user ? (
         <div className="flex items-center gap-4">
-            <Button variant={"destructive"}>
+            <Button variant={"ghost"}>
                 <Link
                     href="/account"
                     className={"flex items-center gap-2 text-muted-foreground"}
