@@ -13,13 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Delete, Eye, Pencil, Trash } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useDeleteItem } from "@/hooks/useDeleteItem";
-import {ImageUploader} from "@/components/image-uploader";
-import {Input} from "@/components/ui/input";
-import {AppSelect} from "@/components/ui/select";
-import {TOOL_CATEGORIES} from "@/app/tool-categories";
-import {Textarea} from "@/components/ui/textarea";
-import {AddressInput} from "@/components/address-input";
-import {useEditItem} from "@/hooks/useEditItem";
+import { ImageUploader } from "@/components/image-uploader";
+import { Input } from "@/components/ui/input";
+import { AppSelect } from "@/components/ui/select";
+import { TOOL_CATEGORIES } from "@/app/tool-categories";
+import { Textarea } from "@/components/ui/textarea";
+import { AddressInput } from "@/components/address-input";
+import { useEditItem } from "@/hooks/useEditItem";
 
 
 type Rented = Database["public"]["Tables"]["rent_dates"]["Row"] & {
@@ -221,7 +221,7 @@ export default function Page() {
                                 </Label>
                                 <Label
                                     className={`relative text-base text-foreground peer-checked:line-through font-medium`}>
-                                    {user?.phone || "-"}
+                                    {user?.phone || user?.user_metadata.phone || "-"}
                                 </Label>
                             </div>
 
@@ -232,7 +232,7 @@ export default function Page() {
                                 </Label>
                                 <Label
                                     className={`relative text-base text-foreground peer-checked:line-through font-medium`}>
-                                    {user?.user_metadata.address || "-"}
+                                    {user?.user_metadata.location || "-"}
                                 </Label>
                             </div>
                         </CardContent>
