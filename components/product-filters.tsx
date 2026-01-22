@@ -8,14 +8,16 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {AppSelect} from "@/components/ui/select";
-import {TOOL_CATEGORIES} from "@/app/tool-categories";
+import { AppSelect } from "@/components/ui/select";
+import { TOOL_CATEGORIES } from "@/app/tool-categories";
 
 interface ProductFiltersProps {
     name: string;
     setName: React.Dispatch<React.SetStateAction<string>>;
+    minPrice: number;
     maxPrice: number;
-    setMaxPrice: React.Dispatch<React.SetStateAction<number>>;
+    maxPriceFilter: number;
+    setMaxPriceFilter: React.Dispatch<React.SetStateAction<number | null>>;
     distance: number;
     setDistance: React.Dispatch<React.SetStateAction<number>>;
     startDate: string;
@@ -27,19 +29,21 @@ interface ProductFiltersProps {
 }
 
 export function ProductFilters({
-                                   name,
-                                   setName,
-                                   maxPrice,
-                                   setMaxPrice,
-                                   distance,
-                                   setDistance,
-                                   startDate,
-                                   setStartDate,
-                                   endDate,
-                                   setEndDate,
-                                   category,
-                                   setCategory,
-                               }: ProductFiltersProps) {
+    name,
+    setName,
+    minPrice,
+    maxPrice,
+    maxPriceFilter,
+    setMaxPriceFilter,
+    distance,
+    setDistance,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    category,
+    setCategory,
+}: ProductFiltersProps) {
     return (
         <div className="w-full max-w-xs">
             <Card>
@@ -87,16 +91,16 @@ export function ProductFilters({
 
                     <div className="flex flex-col gap-0.5">
                         <Label className="relative text-base text-foreground font-medium">
-                            Max price: {maxPrice}€ / day
+                            Max price: {maxPriceFilter}€ / day
                         </Label>
                         <Input
                             className="p-0 accent-primary"
                             id="maxPrice"
                             type="range"
-                            min={5}
-                            max={100}
-                            value={maxPrice}
-                            onChange={(e) => setMaxPrice(+e.target.value)}
+                            min={minPrice}
+                            max={maxPrice}
+                            value={maxPriceFilter}
+                            onChange={(e) => setMaxPriceFilter(+e.target.value)}
                         />
                     </div>
 
