@@ -80,42 +80,27 @@ export type Database = {
       }
       messages: {
         Row: {
-          chat_id: number
           created_at: string
+          from_id: string
           id: number
           message: string
-          sender_id: string
+          to_id: string
         }
         Insert: {
-          chat_id: number
           created_at?: string
+          from_id?: string
           id?: number
           message: string
-          sender_id?: string
+          to_id: string
         }
         Update: {
-          chat_id?: number
           created_at?: string
+          from_id?: string
           id?: number
           message?: string
-          sender_id?: string
+          to_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats_with_names"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -282,45 +267,33 @@ export type Database = {
       }
       messages_with_sender: {
         Row: {
-          chat_id: number | null
-          created_at: string | null
-          id: number | null
-          message: string | null
-          sender_id: string | null
-          sender_name: string | null
+          created_at: string
+          from_id: string
+          from_name: string
+          id: number
+          message: string
+          to_id: string
+          to_name: string
         }
         Insert: {
-          chat_id?: number | null
-          created_at?: string | null
-          id?: number | null
-          message?: string | null
-          sender_id?: string | null
-          sender_name?: never
+          created_at?: string
+          from_id?: string
+          from_name?: never
+          id?: number
+          message?: string
+          to_id?: string
+          to_name?: never
         }
         Update: {
-          chat_id?: number | null
-          created_at?: string | null
-          id?: number | null
-          message?: string | null
-          sender_id?: string | null
-          sender_name?: never
+          created_at?: string
+          from_id?: string
+          from_name?: never
+          id?: number
+          message?: string
+          to_id?: string
+          to_name?: never
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats_with_names"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       rent_dates_with_renter: {
         Row: {
