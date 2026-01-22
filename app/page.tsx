@@ -17,7 +17,9 @@ type Item = Database["public"]["Views"]["rent_offers_with_owner"]["Row"] & {
 
 export default function Home() {
     const [name, setName] = useState("");
-    const [maxPrice, setMaxPrice] = useState(60);
+    const [minPrice, setMinPrice] = useState(0);
+    const [maxPrice, setMaxPrice] = useState(100);
+    const [maxPriceFilter, setMaxPriceFilter] = useState<number | null>(null);
     const [distance, setDistance] = useState(15);
     const [category, setCategory] = useState<string>("");
 
@@ -33,6 +35,23 @@ export default function Home() {
         (async () => {
             const supabase = await createClient();
 
+            let min_max = await supabase
+                .rpc("get_offer_price_min_max");
+
+            if (min_max.error) {
+                console.log("Error fetching min_max:", min_max.error);
+                return;
+            }
+
+            setMinPrice(min_max.data[0].min_price_cents / 100);
+            setMaxPrice(min_max.data[0].max_price_cents / 100);
+        })();
+    }, []);
+
+    useEffect(() => {
+        (async () => {
+            const supabase = await createClient();
+
             let query = supabase
                 .from("rent_offers_with_owner")
                 .select(`
@@ -41,9 +60,11 @@ export default function Home() {
                         *
                         )
                     `)
-                .lte("price_cents", maxPrice * 100)
                 .or(`title.like.%${name}%,description.like.%${name}%`)
 
+            if (maxPriceFilter !== null && maxPriceFilter !== undefined) {
+                query = query.lte("price_cents", maxPriceFilter * 100);
+            }
 
             if (category != "") {
                 console.log("category", category);
@@ -59,15 +80,17 @@ export default function Home() {
 
             setItems(itemResult.data);
         })();
-    }, [name, maxPrice, category]);
+    }, [name, maxPriceFilter, category]);
 
     return (
         <div className="flex min-h-svh w-full p-6 md:p-10 gap-6 max-w-6xl">
             <ProductFilters
                 name={name}
                 setName={setName}
+                minPrice={minPrice}
                 maxPrice={maxPrice}
-                setMaxPrice={setMaxPrice}
+                maxPriceFilter={maxPriceFilter || maxPrice}
+                setMaxPriceFilter={setMaxPriceFilter}
                 distance={distance}
                 setDistance={setDistance}
                 startDate={startDate}
