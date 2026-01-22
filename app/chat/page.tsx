@@ -87,6 +87,9 @@ function ChatPage() {
             const firstChatId = newMessages.keys().next().value;
             if (firstChatId) {
                 setActiveChatId(firstChatId);
+                setActiveChatRecipient(
+                    newMessages.get(firstChatId)![0].from_name
+                );
             }
 
             // Subscribe to new messages
