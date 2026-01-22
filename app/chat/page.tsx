@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,7 +11,6 @@ import { ChatConversation } from "@/components/chat-conversation";
 import { createClient } from "@/lib/supabase/client";
 import { getUser } from "../account/server";
 import { User } from "@supabase/supabase-js";
-import { connection } from "next/server";
 
 export type ChatMessage = {
     id: number;
@@ -23,8 +22,15 @@ export type ChatMessage = {
     message: string;
 };
 
-export default async function Page() {
-    await connection()
+export default function Page() {
+    return (
+        <Suspense fallback={<div className="flex flex-col gap-6 p-6 w-full min-h-svh items-start max-w-3xl">Loading...</div>}>
+            <ChatPage />
+        </Suspense>
+    );
+}
+
+function ChatPage() {
     const router = useRouter();
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
     const [messages, setMessages] = useState<
